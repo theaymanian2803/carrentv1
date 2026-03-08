@@ -14,16 +14,268 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          car_id: string
+          created_at: string
+          end_date: string
+          id: string
+          owner_payout: number
+          platform_fee: number
+          renter_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["booking_status"]
+          total_days: number
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          car_id: string
+          created_at?: string
+          end_date: string
+          id?: string
+          owner_payout?: number
+          platform_fee?: number
+          renter_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_days: number
+          total_price?: number
+          updated_at?: string
+        }
+        Update: {
+          car_id?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          owner_payout?: number
+          platform_fee?: number
+          renter_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_days?: number
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cars: {
+        Row: {
+          address: string
+          category: Database["public"]["Enums"]["car_category"]
+          created_at: string
+          daily_rate: number
+          description: string | null
+          features: Json
+          id: string
+          images: string[]
+          is_active: boolean
+          location_lat: number | null
+          location_lng: number | null
+          make: string
+          model: string
+          owner_id: string
+          status: Database["public"]["Enums"]["car_status"]
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          address?: string
+          category: Database["public"]["Enums"]["car_category"]
+          created_at?: string
+          daily_rate: number
+          description?: string | null
+          features?: Json
+          id?: string
+          images?: string[]
+          is_active?: boolean
+          location_lat?: number | null
+          location_lng?: number | null
+          make: string
+          model: string
+          owner_id: string
+          status?: Database["public"]["Enums"]["car_status"]
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          address?: string
+          category?: Database["public"]["Enums"]["car_category"]
+          created_at?: string
+          daily_rate?: number
+          description?: string | null
+          features?: Json
+          id?: string
+          images?: string[]
+          is_active?: boolean
+          location_lat?: number | null
+          location_lng?: number | null
+          make?: string
+          model?: string
+          owner_id?: string
+          status?: Database["public"]["Enums"]["car_status"]
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          booking_id: string | null
+          content: string
+          created_at: string
+          id: string
+          read_status: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          read_status?: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          read_status?: boolean
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          kyc_status: Database["public"]["Enums"]["kyc_status"]
+          stripe_account_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
+          stripe_account_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
+          stripe_account_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          reviewee_id?: string
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "owner" | "renter"
+      booking_status:
+        | "pending"
+        | "approved"
+        | "active"
+        | "completed"
+        | "cancelled"
+        | "disputed"
+      car_category: "SUV" | "Sedan" | "Luxury" | "Electric"
+      car_status: "pending_approval" | "live" | "delisted"
+      kyc_status: "pending" | "verified" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +402,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "owner", "renter"],
+      booking_status: [
+        "pending",
+        "approved",
+        "active",
+        "completed",
+        "cancelled",
+        "disputed",
+      ],
+      car_category: ["SUV", "Sedan", "Luxury", "Electric"],
+      car_status: ["pending_approval", "live", "delisted"],
+      kyc_status: ["pending", "verified", "rejected"],
+    },
   },
 } as const
