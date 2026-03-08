@@ -112,6 +112,7 @@ function SectionContentEditor({
     case 'hero':
       return (
         <div className="grid gap-4">
+          <JsonFieldEditor label="Background Image URL" value={content.image_url ?? ''} onChange={(v) => set('image_url', v)} />
           <JsonFieldEditor label="Subtitle tag" value={content.subtitle ?? ''} onChange={(v) => set('subtitle', v)} />
           <JsonFieldEditor label="Heading Line 1" value={content.heading_line1 ?? ''} onChange={(v) => set('heading_line1', v)} />
           <JsonFieldEditor label="Highlighted word" value={content.heading_highlight ?? ''} onChange={(v) => set('heading_highlight', v)} />
