@@ -26,16 +26,24 @@ const SubscriptionManager = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('subscriptions')
-      .select('id, user_id, plan, status, current_period_end, paypal_subscription_id, profiles:user_id(full_name)')
+      .select('id, user_id, plan, status, current_period_end, paypal_subscription_id')
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error(error);
       toast({ title: 'Error loading subscriptions', variant: 'destructive' });
     } else {
-      const mapped = (data || []).map((s: any) => ({
+      // Fetch profiles for all user_ids
+      const userIds = (data || []).map((s) => s.user_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+
+      const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
+      const mapped = (data || []).map((s) => ({
         ...s,
-        profile: Array.isArray(s.profiles) ? s.profiles[0] : s.profiles,
+        profile: profileMap.get(s.user_id) || null,
       }));
       setSubs(mapped);
     }
