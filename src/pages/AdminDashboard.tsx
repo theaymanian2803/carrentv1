@@ -41,7 +41,7 @@ const AdminDashboard = () => {
             <Card><CardContent className="p-8 text-center text-muted-foreground">User management table — coming soon.</CardContent></Card>
           </TabsContent>
           <TabsContent value="listings" className="mt-4">
-            <Card><CardContent className="p-8 text-center text-muted-foreground">Listing approval queue — coming soon.</CardContent></Card>
+            <ListingApprovalQueue />
           </TabsContent>
           <TabsContent value="disputes" className="mt-4">
             <Card><CardContent className="p-8 text-center text-muted-foreground">Dispute resolution panel — coming soon.</CardContent></Card>
