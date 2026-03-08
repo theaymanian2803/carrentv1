@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Search from "./pages/Search";
+import CarDetails from "./pages/CarDetails";
 import AdminDashboard from "./pages/AdminDashboard";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import RenterDashboard from "./pages/RenterDashboard";
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/cars/:id" element={<CarDetails />} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/owner" element={<ProtectedRoute requiredRole="owner"><OwnerDashboard /></ProtectedRoute>} />
             <Route path="/renter" element={<ProtectedRoute requiredRole="renter"><RenterDashboard /></ProtectedRoute>} />
