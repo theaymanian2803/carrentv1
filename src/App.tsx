@@ -11,6 +11,7 @@ import Search from "./pages/Search";
 import CarDetails from "./pages/CarDetails";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminAddCar from "./pages/AdminAddCar";
+import AdminPageBuilder from "./pages/AdminPageBuilder";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import RenterDashboard from "./pages/RenterDashboard";
 import NotFound from "./pages/NotFound";
