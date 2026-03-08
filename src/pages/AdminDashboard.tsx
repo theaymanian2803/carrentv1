@@ -2,6 +2,7 @@ import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Car, AlertTriangle, DollarSign } from 'lucide-react';
+import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
 
 const AdminDashboard = () => {
   return (
