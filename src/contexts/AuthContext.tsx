@@ -25,12 +25,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfileAndRoles = async (userId: string) => {
     const [profileRes, rolesRes] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', userId).single(),
-      supabase.from('user_roles').select('role').eq('user_id', userId),
+      (supabase as any).from('profiles').select('*').eq('id', userId).single(),
+      (supabase as any).from('user_roles').select('role').eq('user_id', userId),
     ]);
 
     if (profileRes.data) setProfile(profileRes.data as Profile);
-    if (rolesRes.data) setRoles(rolesRes.data.map((r: { role: AppRole }) => r.role));
+    if (rolesRes.data) setRoles((rolesRes.data as { role: AppRole }[]).map((r) => r.role));
   };
 
   useEffect(() => {
