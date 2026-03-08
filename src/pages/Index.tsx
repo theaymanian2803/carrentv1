@@ -17,6 +17,10 @@ import {
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import heroImg from '@/assets/hero-car.jpg';
+import catSuv from '@/assets/cat-suv.png';
+import catSedan from '@/assets/cat-sedan.png';
+import catLuxury from '@/assets/cat-luxury.png';
+import catElectric from '@/assets/cat-electric.png';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
