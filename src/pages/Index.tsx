@@ -39,10 +39,10 @@ const STATS = [
 ];
 
 const CATEGORIES = [
-  { name: 'SUV', icon: '🚙', count: 120, gradient: 'from-primary/20 to-primary/5' },
-  { name: 'Sedan', icon: '🚗', count: 85, gradient: 'from-secondary/30 to-secondary/10' },
-  { name: 'Luxury', icon: '✨', count: 42, gradient: 'from-primary/25 to-secondary/10' },
-  { name: 'Electric', icon: '⚡', count: 67, gradient: 'from-primary/15 to-primary/5' },
+  { name: 'SUV', img: catSuv, count: 120, gradient: 'from-primary/20 to-primary/5' },
+  { name: 'Sedan', img: catSedan, count: 85, gradient: 'from-secondary/30 to-secondary/10' },
+  { name: 'Luxury', img: catLuxury, count: 42, gradient: 'from-primary/25 to-secondary/10' },
+  { name: 'Electric', img: catElectric, count: 67, gradient: 'from-primary/15 to-primary/5' },
 ];
 
 const FEATURES = [
