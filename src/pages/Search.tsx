@@ -37,7 +37,7 @@ const Search = () => {
       .order('created_at', { ascending: false });
 
     if (selectedCategories.length > 0) {
-      query = query.in('category', selectedCategories);
+      query = query.in('category', selectedCategories as ("SUV" | "Sedan" | "Luxury" | "Electric")[]);
     }
     if (location.trim()) {
       query = query.ilike('address', `%${location.trim()}%`);
