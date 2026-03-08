@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, Crown, Zap, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentPlan: 'free' | 'pro';
   listingCount: number;
+  onUpgradeComplete?: () => void;
 }
 
 const plans = [
@@ -32,17 +34,107 @@ const plans = [
   },
 ];
 
-const UpgradeModal = ({ open, onOpenChange, currentPlan, listingCount }: UpgradeModalProps) => {
+const UpgradeModal = ({ open, onOpenChange, currentPlan, listingCount, onUpgradeComplete }: UpgradeModalProps) => {
   const [processing, setProcessing] = useState(false);
+
+  // Handle return from PayPal approval
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const subscriptionId = params.get('subscription_id');
+    const subscriptionStatus = params.get('subscription');
+
+    if (subscriptionId && subscriptionStatus === 'success') {
+      activateSubscription(subscriptionId);
+      // Clean URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('subscription_id');
+      url.searchParams.delete('subscription');
+      url.searchParams.delete('ba_token');
+      url.searchParams.delete('token');
+      window.history.replaceState({}, '', url.pathname);
+    }
+  }, []);
+
+  const activateSubscription = async (subscriptionId: string) => {
+    setProcessing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-subscription`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ subscription_id: subscriptionId }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Activation failed');
+
+      toast({
+        title: '🎉 Welcome to Pro!',
+        description: 'You can now list up to 15 cars. Enjoy your upgraded plan!',
+      });
+      onUpgradeComplete?.();
+    } catch (err: any) {
+      console.error('Activation error:', err);
+      toast({
+        title: 'Activation issue',
+        description: err.message || 'Please contact support if your payment went through.',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   const handleUpgrade = async () => {
     setProcessing(true);
-    // PayPal integration will be added later
-    toast({
-      title: 'PayPal integration coming soon',
-      description: 'Payment processing will be enabled once PayPal credentials are configured.',
-    });
-    setProcessing(false);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const currentUrl = window.location.origin + '/owner';
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-paypal-subscription`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            return_url: `${currentUrl}?subscription=success`,
+            cancel_url: `${currentUrl}?subscription=cancelled`,
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create subscription');
+
+      if (data.approval_url) {
+        // Append subscription_id to return URL for activation
+        const approvalUrl = new URL(data.approval_url);
+        window.location.href = approvalUrl.toString();
+      } else {
+        throw new Error('No approval URL received from PayPal');
+      }
+    } catch (err: any) {
+      console.error('Upgrade error:', err);
+      toast({
+        title: 'Upgrade failed',
+        description: err.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+      setProcessing(false);
+    }
   };
 
   return (
@@ -84,7 +176,7 @@ const UpgradeModal = ({ open, onOpenChange, currentPlan, listingCount }: Upgrade
                     {plan.id === 'pro' && !isCurrent && (
                       <Button onClick={handleUpgrade} disabled={processing} size="sm" className="gap-2">
                         {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
-                        Upgrade
+                        {processing ? 'Processing...' : 'Upgrade'}
                       </Button>
                     )}
                   </div>
@@ -101,6 +193,10 @@ const UpgradeModal = ({ open, onOpenChange, currentPlan, listingCount }: Upgrade
             );
           })}
         </div>
+
+        <p className="text-xs text-muted-foreground text-center mt-2">
+          Powered by PayPal. Cancel anytime from your PayPal account.
+        </p>
       </DialogContent>
     </Dialog>
   );
