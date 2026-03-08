@@ -35,7 +35,7 @@ const PLATFORM_ITEMS = [
   { title: 'How It Works', desc: 'Simple 3-step process', icon: Search, href: '/#how-it-works' },
   { title: 'Insurance & Safety', desc: 'Every trip is covered', icon: Shield, href: '/#features' },
   { title: 'List Your Car', desc: 'Earn up to $1,200/mo', icon: CreditCard, href: '/#owner-cta' },
-  { title: '24/7 Support', desc: 'We're always here to help', icon: Headphones, href: '/#features' },
+  { title: '24/7 Support', desc: "We're always here to help", icon: Headphones, href: '/#features' },
 ];
 
 interface MegaPanelProps {
