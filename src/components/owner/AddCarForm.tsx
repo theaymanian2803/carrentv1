@@ -151,14 +151,20 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
       description: form.description,
       features: form.features.reduce((acc, f) => ({ ...acc, [f]: true }), {}),
       images: imageUrls,
+      status: defaultStatus,
     });
 
     setSubmitting(false);
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Car listed!', description: 'Your car is pending admin approval.' });
-      navigate('/owner');
+      toast({
+        title: 'Car listed!',
+        description: defaultStatus === 'live'
+          ? 'The car is now live and visible to renters.'
+          : 'Your car is pending admin approval.',
+      });
+      navigate(backPath);
     }
   };
 
