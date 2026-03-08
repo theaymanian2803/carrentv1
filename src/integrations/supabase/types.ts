@@ -266,6 +266,42 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          paypal_subscription_id: string | null
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          paypal_subscription_id?: string | null
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          paypal_subscription_id?: string | null
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -289,6 +325,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_listing_count: { Args: { _user_id: string }; Returns: number }
+      get_listing_limit: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -309,6 +347,8 @@ export type Database = {
       car_category: "SUV" | "Sedan" | "Luxury" | "Electric"
       car_status: "pending_approval" | "live" | "delisted"
       kyc_status: "pending" | "verified" | "rejected"
+      subscription_plan: "free" | "pro"
+      subscription_status: "active" | "cancelled" | "past_due" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -448,6 +488,8 @@ export const Constants = {
       car_category: ["SUV", "Sedan", "Luxury", "Electric"],
       car_status: ["pending_approval", "live", "delisted"],
       kyc_status: ["pending", "verified", "rejected"],
+      subscription_plan: ["free", "pro"],
+      subscription_status: ["active", "cancelled", "past_due", "expired"],
     },
   },
 } as const
