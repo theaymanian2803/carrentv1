@@ -112,6 +112,7 @@ function SectionContentEditor({
     case 'hero':
       return (
         <div className="grid gap-4">
+          <JsonFieldEditor label="Background Image URL" value={content.image_url ?? ''} onChange={(v) => set('image_url', v)} />
           <JsonFieldEditor label="Subtitle tag" value={content.subtitle ?? ''} onChange={(v) => set('subtitle', v)} />
           <JsonFieldEditor label="Heading Line 1" value={content.heading_line1 ?? ''} onChange={(v) => set('heading_line1', v)} />
           <JsonFieldEditor label="Highlighted word" value={content.heading_highlight ?? ''} onChange={(v) => set('heading_highlight', v)} />
@@ -172,6 +173,7 @@ function SectionContentEditor({
     case 'owner_cta':
       return (
         <div className="grid gap-4">
+          <JsonFieldEditor label="Background Image URL" value={content.image_url ?? ''} onChange={(v) => set('image_url', v)} />
           <JsonFieldEditor label="Subtitle" value={content.subtitle ?? ''} onChange={(v) => set('subtitle', v)} />
           <JsonFieldEditor label="Heading" value={content.heading ?? ''} onChange={(v) => set('heading', v)} />
           <JsonFieldEditor label="Highlight" value={content.highlight ?? ''} onChange={(v) => set('highlight', v)} />
@@ -187,6 +189,7 @@ function SectionContentEditor({
     case 'final_cta':
       return (
         <div className="grid gap-4">
+          <JsonFieldEditor label="Background Image URL" value={content.image_url ?? ''} onChange={(v) => set('image_url', v)} />
           <JsonFieldEditor label="Heading before" value={content.heading_before ?? ''} onChange={(v) => set('heading_before', v)} />
           <JsonFieldEditor label="Highlighted word" value={content.heading_highlight ?? ''} onChange={(v) => set('heading_highlight', v)} />
           <JsonFieldEditor label="Heading after" value={content.heading_after ?? ''} onChange={(v) => set('heading_after', v)} />

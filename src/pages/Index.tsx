@@ -51,9 +51,10 @@ const CAT_IMG_MAP: Record<string, string> = {
 
 function HeroSection({ content }: { content: Record<string, any> }) {
   const stats = (content.stats ?? []) as { value: string; label: string }[];
+  const bgImage = content.image_url || heroImg;
   return (
     <section className="relative h-[100vh] min-h-[600px] flex items-end overflow-hidden">
-      <img src={heroImg} alt="Luxury car on a cinematic night street" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+      <img src={bgImage} alt="Hero background" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
       <div className="container relative z-10 pb-20 lg:pb-28">
@@ -242,10 +243,22 @@ function TestimonialsSection({ content }: { content: Record<string, any> }) {
 function OwnerCtaSection({ content }: { content: Record<string, any> }) {
   const bullets = (content.bullets ?? []) as string[];
   return (
-    <section className="py-24 lg:py-32 border-t border-border/40">
-      <div className="container">
-        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="rounded-3xl bg-card border border-border/50 overflow-hidden">
-          <div className="grid lg:grid-cols-2">
+    <section className="relative py-24 lg:py-32 border-t border-border/40 overflow-hidden">
+      <div className="container relative z-10">
+        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="relative rounded-3xl overflow-hidden min-h-[500px]">
+          {/* Background image (absolute) */}
+          {content.image_url && (
+            <>
+              <img src={content.image_url} alt="Banner background" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/40" />
+            </>
+          )}
+          {!content.image_url && (
+            <div className="absolute inset-0 bg-card border border-border/50" />
+          )}
+
+          {/* Content on top */}
+          <div className="relative z-10 grid lg:grid-cols-2 min-h-[500px]">
             <div className="p-10 lg:p-16 flex flex-col justify-center">
               <span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">{content.subtitle}</span>
               <h2 className="text-3xl lg:text-4xl font-bold mt-3 leading-tight">
@@ -268,15 +281,17 @@ function OwnerCtaSection({ content }: { content: Record<string, any> }) {
                 </Link>
               </div>
             </div>
-            <div className="relative min-h-[300px] lg:min-h-0 bg-muted/30 flex items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-              <div className="relative text-center p-10">
-                <div className="text-7xl lg:text-8xl font-bold text-primary/15">$$$</div>
-                <div className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-xl shadow-primary/30">
-                  Up to {content.highlight}
+            {!content.image_url && (
+              <div className="relative min-h-[300px] lg:min-h-0 bg-muted/30 flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
+                <div className="relative text-center p-10">
+                  <div className="text-7xl lg:text-8xl font-bold text-primary/15">$$$</div>
+                  <div className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-xl shadow-primary/30">
+                    Up to {content.highlight}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </motion.div>
       </div>
@@ -286,8 +301,16 @@ function OwnerCtaSection({ content }: { content: Record<string, any> }) {
 
 function FinalCtaSection({ content }: { content: Record<string, any> }) {
   return (
-    <section className="py-32 lg:py-44 border-t border-border/40 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,hsl(var(--primary)/0.06),transparent_60%)]" />
+    <section className="relative py-32 lg:py-44 border-t border-border/40 overflow-hidden">
+      {/* Background image (absolute) if provided */}
+      {content.image_url ? (
+        <>
+          <img src={content.image_url} alt="CTA background" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,hsl(var(--primary)/0.06),transparent_60%)]" />
+      )}
       <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="container relative z-10 text-center">
         <h2 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight">
           {content.heading_before} <span className="text-primary">{content.heading_highlight}</span>{content.heading_after}
