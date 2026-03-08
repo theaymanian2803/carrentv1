@@ -34,29 +34,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    let mounted = true;
+
+    const handleSession = async (session: Session | null) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        setTimeout(() => fetchProfileAndRoles(session.user.id), 0);
+        const [profileRes, rolesRes] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+          supabase.from('user_roles').select('role').eq('user_id', session.user.id),
+        ]);
+        if (!mounted) return;
+        if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
+        if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role as AppRole));
       } else {
         setProfile(null);
         setRoles([]);
       }
       setLoading(false);
-    });
+    };
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfileAndRoles(session.user.id);
-      }
-      setLoading(false);
+      handleSession(session);
     });
 
-    return () => subscription.unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Only handle non-initial events to avoid double-processing
+      handleSession(session);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
