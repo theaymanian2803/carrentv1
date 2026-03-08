@@ -301,8 +301,16 @@ function OwnerCtaSection({ content }: { content: Record<string, any> }) {
 
 function FinalCtaSection({ content }: { content: Record<string, any> }) {
   return (
-    <section className="py-32 lg:py-44 border-t border-border/40 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,hsl(var(--primary)/0.06),transparent_60%)]" />
+    <section className="relative py-32 lg:py-44 border-t border-border/40 overflow-hidden">
+      {/* Background image (absolute) if provided */}
+      {content.image_url ? (
+        <>
+          <img src={content.image_url} alt="CTA background" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,hsl(var(--primary)/0.06),transparent_60%)]" />
+      )}
       <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="container relative z-10 text-center">
         <h2 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight">
           {content.heading_before} <span className="text-primary">{content.heading_highlight}</span>{content.heading_after}
