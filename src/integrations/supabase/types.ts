@@ -127,6 +127,39 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_sections: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          is_visible: boolean
+          section_type: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          section_type: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          section_type?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           booking_id: string | null

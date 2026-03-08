@@ -3,7 +3,7 @@ import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users, Car, AlertTriangle, DollarSign, Plus } from 'lucide-react';
+import { Users, Car, AlertTriangle, DollarSign, Plus, LayoutDashboard } from 'lucide-react';
 import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
 import AllListingsTable from '@/components/admin/AllListingsTable';
 
@@ -13,7 +13,12 @@ const AdminDashboard = () => {
     <div className="min-h-screen">
       <Navbar />
       <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <Button onClick={() => navigate('/admin/page-builder')} variant="outline" className="gap-2">
+            <LayoutDashboard className="h-4 w-4" /> Page Builder
+          </Button>
+        </div>
 
         {/* Overview cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
