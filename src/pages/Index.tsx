@@ -247,11 +247,18 @@ const Index = () => {
             >
               <Link to={`/search?category=${cat.name}`}>
                 <Card className="group hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 cursor-pointer overflow-hidden">
-                  <CardContent className={`p-8 text-center bg-gradient-to-br ${cat.gradient}`}>
-                    <span className="text-5xl block mb-4 group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
+                  <CardContent className={`p-6 bg-gradient-to-br ${cat.gradient} flex flex-col items-center`}>
+                    <div className="h-36 w-full flex items-center justify-center mb-3 overflow-hidden">
+                      <img
+                        src={cat.img}
+                        alt={`${cat.name} category`}
+                        className="h-full w-auto object-contain group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    </div>
                     <h3 className="font-bold text-xl group-hover:text-primary transition-colors">{cat.name}</h3>
                     <p className="text-sm text-muted-foreground mt-1">{cat.count}+ cars</p>
-                    <ChevronRight className="h-5 w-5 mx-auto mt-3 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    <ChevronRight className="h-5 w-5 mt-3 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </CardContent>
                 </Card>
               </Link>
