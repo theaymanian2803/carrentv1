@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Search from "./pages/Search";
 import CarDetails from "./pages/CarDetails";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminAddCar from "./pages/AdminAddCar";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import RenterDashboard from "./pages/RenterDashboard";
 import NotFound from "./pages/NotFound";
