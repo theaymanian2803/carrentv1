@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Car, AlertTriangle, DollarSign } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Car, AlertTriangle, DollarSign, Plus } from 'lucide-react';
 import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
 
 const AdminDashboard = () => {
