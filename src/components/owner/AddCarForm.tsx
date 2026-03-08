@@ -36,7 +36,12 @@ interface FormData {
   imagePreviewUrls: string[];
 }
 
-const AddCarForm = () => {
+interface AddCarFormProps {
+  backPath?: string;
+  defaultStatus?: 'pending_approval' | 'live';
+}
+
+const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }: AddCarFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState(0);
