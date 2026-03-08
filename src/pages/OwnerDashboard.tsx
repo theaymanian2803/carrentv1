@@ -5,17 +5,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Car, Calendar, DollarSign, BarChart3 } from 'lucide-react';
 import FleetGrid from '@/components/owner/FleetGrid';
 import AddCarForm from '@/components/owner/AddCarForm';
+import PlanBadge from '@/components/owner/PlanBadge';
+import UpgradeModal from '@/components/owner/UpgradeModal';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const OwnerDashboard = () => {
   const [showAddCar, setShowAddCar] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const sub = useSubscription();
+
+  const handleAddCar = () => {
+    if (!sub.canListMore) {
+      setUpgradeOpen(true);
+      return;
+    }
+    setShowAddCar(true);
+  };
 
   return (
     <div className="min-h-screen">
       <Navbar />
       <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-8">
+        <h1 className="text-3xl font-bold mb-6">
           {showAddCar ? 'List a New Car' : 'Owner Dashboard'}
         </h1>
+
+        {!showAddCar && !sub.loading && (
+          <div className="mb-6">
+            <PlanBadge
+              plan={sub.plan}
+              listingCount={sub.listingCount}
+              listingLimit={sub.listingLimit}
+              onUpgradeClick={() => setUpgradeOpen(true)}
+            />
+          </div>
+        )}
 
         {showAddCar ? (
           <AddCarForm />
@@ -24,7 +48,7 @@ const OwnerDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {[
                 { title: 'Monthly Earnings', value: '$0', icon: DollarSign },
-                { title: 'Active Listings', value: '0', icon: Car },
+                { title: 'Active Listings', value: String(sub.listingCount), icon: Car },
                 { title: 'Upcoming Bookings', value: '0', icon: Calendar },
                 { title: 'Conversion Rate', value: '0%', icon: BarChart3 },
               ].map((m) => (
@@ -48,7 +72,7 @@ const OwnerDashboard = () => {
                 <TabsTrigger value="payouts">Payouts</TabsTrigger>
               </TabsList>
               <TabsContent value="fleet" className="mt-4">
-                <FleetGrid onAddCar={() => setShowAddCar(true)} />
+                <FleetGrid onAddCar={handleAddCar} />
               </TabsContent>
               <TabsContent value="bookings" className="mt-4">
                 <Card><CardContent className="p-8 text-center text-muted-foreground">Booking request board — coming soon.</CardContent></Card>
@@ -57,11 +81,18 @@ const OwnerDashboard = () => {
                 <Card><CardContent className="p-8 text-center text-muted-foreground">Calendar & dynamic pricing — coming soon.</CardContent></Card>
               </TabsContent>
               <TabsContent value="payouts" className="mt-4">
-                <Card><CardContent className="p-8 text-center text-muted-foreground">Stripe Connect payouts — coming soon.</CardContent></Card>
+                <Card><CardContent className="p-8 text-center text-muted-foreground">PayPal payouts — coming soon.</CardContent></Card>
               </TabsContent>
             </Tabs>
           </>
         )}
+
+        <UpgradeModal
+          open={upgradeOpen}
+          onOpenChange={setUpgradeOpen}
+          currentPlan={sub.plan}
+          listingCount={sub.listingCount}
+        />
       </div>
     </div>
   );

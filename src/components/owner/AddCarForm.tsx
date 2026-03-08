@@ -134,6 +134,22 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
     if (!user) return;
     setSubmitting(true);
 
+    // Check listing limit before submitting
+    const { data: limitData } = await supabase.rpc('get_listing_limit', { _user_id: user.id });
+    const { data: countData } = await supabase.rpc('get_listing_count', { _user_id: user.id });
+    const limit = (limitData as number) ?? 3;
+    const count = (countData as number) ?? 0;
+
+    if (count >= limit) {
+      setSubmitting(false);
+      toast({
+        title: 'Listing limit reached',
+        description: `Your current plan allows ${limit} listings. Upgrade to add more cars.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const imageUrls = await uploadImages();
     if (imageUrls.length === 0 && form.images.length > 0) {
       setSubmitting(false);
