@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        setTimeout(() => fetchProfileAndRoles(session.user.id), 0);
+        await fetchProfileAndRoles(session.user.id);
       } else {
         setProfile(null);
         setRoles([]);
@@ -47,11 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfileAndRoles(session.user.id);
+        await fetchProfileAndRoles(session.user.id);
       }
       setLoading(false);
     });
