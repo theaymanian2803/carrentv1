@@ -51,9 +51,10 @@ const CAT_IMG_MAP: Record<string, string> = {
 
 function HeroSection({ content }: { content: Record<string, any> }) {
   const stats = (content.stats ?? []) as { value: string; label: string }[];
+  const bgImage = content.image_url || heroImg;
   return (
     <section className="relative h-[100vh] min-h-[600px] flex items-end overflow-hidden">
-      <img src={heroImg} alt="Luxury car on a cinematic night street" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+      <img src={bgImage} alt="Hero background" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
       <div className="container relative z-10 pb-20 lg:pb-28">
