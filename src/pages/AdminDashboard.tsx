@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Users, Car, AlertTriangle, DollarSign, Plus } from 'lucide-react';
 import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
+import AllListingsTable from '@/components/admin/AllListingsTable';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
