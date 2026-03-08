@@ -7,6 +7,7 @@ import { Users, Car, AlertTriangle, DollarSign, Plus } from 'lucide-react';
 import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen">
       <Navbar />
