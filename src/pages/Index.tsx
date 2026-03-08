@@ -243,10 +243,22 @@ function TestimonialsSection({ content }: { content: Record<string, any> }) {
 function OwnerCtaSection({ content }: { content: Record<string, any> }) {
   const bullets = (content.bullets ?? []) as string[];
   return (
-    <section className="py-24 lg:py-32 border-t border-border/40">
-      <div className="container">
-        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="rounded-3xl bg-card border border-border/50 overflow-hidden">
-          <div className="grid lg:grid-cols-2">
+    <section className="relative py-24 lg:py-32 border-t border-border/40 overflow-hidden">
+      <div className="container relative z-10">
+        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="relative rounded-3xl overflow-hidden min-h-[500px]">
+          {/* Background image (absolute) */}
+          {content.image_url && (
+            <>
+              <img src={content.image_url} alt="Banner background" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/40" />
+            </>
+          )}
+          {!content.image_url && (
+            <div className="absolute inset-0 bg-card border border-border/50" />
+          )}
+
+          {/* Content on top */}
+          <div className="relative z-10 grid lg:grid-cols-2 min-h-[500px]">
             <div className="p-10 lg:p-16 flex flex-col justify-center">
               <span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">{content.subtitle}</span>
               <h2 className="text-3xl lg:text-4xl font-bold mt-3 leading-tight">
@@ -269,15 +281,17 @@ function OwnerCtaSection({ content }: { content: Record<string, any> }) {
                 </Link>
               </div>
             </div>
-            <div className="relative min-h-[300px] lg:min-h-0 bg-muted/30 flex items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-              <div className="relative text-center p-10">
-                <div className="text-7xl lg:text-8xl font-bold text-primary/15">$$$</div>
-                <div className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-xl shadow-primary/30">
-                  Up to {content.highlight}
+            {!content.image_url && (
+              <div className="relative min-h-[300px] lg:min-h-0 bg-muted/30 flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
+                <div className="relative text-center p-10">
+                  <div className="text-7xl lg:text-8xl font-bold text-primary/15">$$$</div>
+                  <div className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-xl shadow-primary/30">
+                    Up to {content.highlight}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </motion.div>
       </div>
