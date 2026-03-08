@@ -51,6 +51,8 @@ const AdminDashboard = () => {
               </Button>
             </div>
             <ListingApprovalQueue />
+            <h2 className="text-xl font-semibold mt-8 mb-4">All Listings</h2>
+            <AllListingsTable />
           </TabsContent>
           <TabsContent value="disputes" className="mt-4">
             <Card><CardContent className="p-8 text-center text-muted-foreground">Dispute resolution panel — coming soon.</CardContent></Card>
