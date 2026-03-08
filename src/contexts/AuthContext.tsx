@@ -36,31 +36,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchProfileAndRoles(session.user.id);
-      }
-      if (mounted) setLoading(false);
-    };
-
-    init();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const handleSession = async (session: Session | null) => {
       if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        await fetchProfileAndRoles(session.user.id);
+        const [profileRes, rolesRes] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+          supabase.from('user_roles').select('role').eq('user_id', session.user.id),
+        ]);
+        if (!mounted) return;
+        if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
+        if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role as AppRole));
       } else {
         setProfile(null);
         setRoles([]);
       }
-      if (mounted) setLoading(false);
+      setLoading(false);
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Only handle non-initial events to avoid double-processing
+      handleSession(session);
     });
 
     return () => {
