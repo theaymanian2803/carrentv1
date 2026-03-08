@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-import type { AppRole, Profile } from '@/types/database';
+import type { AppRole } from '@/types/database';
+import type { Profile } from '@/types/database';
 
 interface AuthContextType {
   session: Session | null;
@@ -25,12 +25,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfileAndRoles = async (userId: string) => {
     const [profileRes, rolesRes] = await Promise.all([
-      (supabase as any).from('profiles').select('*').eq('id', userId).single(),
-      (supabase as any).from('user_roles').select('role').eq('user_id', userId),
+      supabase.from('profiles').select('*').eq('id', userId).single(),
+      supabase.from('user_roles').select('role').eq('user_id', userId),
     ]);
 
-    if (profileRes.data) setProfile(profileRes.data as Profile);
-    if (rolesRes.data) setRoles((rolesRes.data as { role: AppRole }[]).map((r) => r.role));
+    if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
+    if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role as AppRole));
   };
 
   useEffect(() => {
