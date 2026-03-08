@@ -92,6 +92,7 @@ const OwnerDashboard = () => {
           onOpenChange={setUpgradeOpen}
           currentPlan={sub.plan}
           listingCount={sub.listingCount}
+          onUpgradeComplete={() => sub.refetch()}
         />
       </div>
     </div>
