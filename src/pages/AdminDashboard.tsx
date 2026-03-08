@@ -1,10 +1,13 @@
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Car, AlertTriangle, DollarSign } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Car, AlertTriangle, DollarSign, Plus } from 'lucide-react';
 import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -41,6 +44,11 @@ const AdminDashboard = () => {
             <Card><CardContent className="p-8 text-center text-muted-foreground">User management table — coming soon.</CardContent></Card>
           </TabsContent>
           <TabsContent value="listings" className="mt-4">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => navigate('/admin/add-car')} className="gap-2">
+                <Plus className="h-4 w-4" /> Add Listing
+              </Button>
+            </div>
             <ListingApprovalQueue />
           </TabsContent>
           <TabsContent value="disputes" className="mt-4">

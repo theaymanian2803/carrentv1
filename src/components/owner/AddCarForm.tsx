@@ -36,7 +36,12 @@ interface FormData {
   imagePreviewUrls: string[];
 }
 
-const AddCarForm = () => {
+interface AddCarFormProps {
+  backPath?: string;
+  defaultStatus?: 'pending_approval' | 'live';
+}
+
+const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }: AddCarFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState(0);
@@ -146,14 +151,20 @@ const AddCarForm = () => {
       description: form.description,
       features: form.features.reduce((acc, f) => ({ ...acc, [f]: true }), {}),
       images: imageUrls,
+      status: defaultStatus,
     });
 
     setSubmitting(false);
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Car listed!', description: 'Your car is pending admin approval.' });
-      navigate('/owner');
+      toast({
+        title: 'Car listed!',
+        description: defaultStatus === 'live'
+          ? 'The car is now live and visible to renters.'
+          : 'Your car is pending admin approval.',
+      });
+      navigate(backPath);
     }
   };
 
@@ -361,7 +372,7 @@ const AddCarForm = () => {
 
       {/* Navigation */}
       <div className="flex justify-between mt-6">
-        <Button variant="outline" onClick={() => step === 0 ? navigate('/owner') : setStep(step - 1)} className="gap-2">
+        <Button variant="outline" onClick={() => step === 0 ? navigate(backPath) : setStep(step - 1)} className="gap-2">
           <ArrowLeft className="h-4 w-4" /> {step === 0 ? 'Cancel' : 'Back'}
         </Button>
         {step < STEPS.length - 1 ? (
