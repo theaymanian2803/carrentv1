@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   ArrowRight,
   Car,
@@ -10,476 +9,400 @@ import {
   MapPin,
   Clock,
   CreditCard,
-  Users,
-  CheckCircle2,
   ChevronRight,
+  Play,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
-import heroImg from '@/assets/hero-car.jpg';
+import heroImg from '@/assets/hero-night.jpg';
 import catSuv from '@/assets/cat-suv.png';
 import catSedan from '@/assets/cat-sedan.png';
 import catLuxury from '@/assets/cat-luxury.png';
 import catElectric from '@/assets/cat-electric.png';
 
+/* ── Animations ── */
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 40 },
   visible: (i: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.6, ease: [0, 0, 0.2, 1] as const },
+    transition: { delay: i * 0.12, duration: 0.7, ease: [0.25, 0.1, 0, 1] },
   }),
 };
 
-const STATS = [
-  { value: '10K+', label: 'Happy Renters' },
-  { value: '2,500+', label: 'Cars Available' },
-  { value: '50+', label: 'Cities Covered' },
-  { value: '4.9★', label: 'Average Rating' },
+const stagger = {
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+/* ── Data ── */
+const CATEGORIES = [
+  { name: 'SUV', img: catSuv, count: '120+', tag: 'Adventure Ready' },
+  { name: 'Sedan', img: catSedan, count: '85+', tag: 'Daily Driver' },
+  { name: 'Luxury', img: catLuxury, count: '42+', tag: 'Premium Feel' },
+  { name: 'Electric', img: catElectric, count: '67+', tag: 'Zero Emission' },
 ];
 
-const CATEGORIES = [
-  { name: 'SUV', img: catSuv, count: 120, gradient: 'from-primary/20 to-primary/5' },
-  { name: 'Sedan', img: catSedan, count: 85, gradient: 'from-secondary/30 to-secondary/10' },
-  { name: 'Luxury', img: catLuxury, count: 42, gradient: 'from-primary/25 to-secondary/10' },
-  { name: 'Electric', img: catElectric, count: 67, gradient: 'from-primary/15 to-primary/5' },
+const STEPS = [
+  { num: '01', title: 'Search', desc: 'Pick your city, dates & style. Filter by price, type, or features.', icon: MapPin },
+  { num: '02', title: 'Book', desc: 'Reserve instantly with secure payment. No deposits, no surprises.', icon: CreditCard },
+  { num: '03', title: 'Drive', desc: 'Keyless pickup or meet your host. Hit the road in minutes.', icon: Zap },
 ];
 
 const FEATURES = [
-  {
-    icon: Shield,
-    title: 'Verified & Insured',
-    desc: 'Every host is KYC verified and every trip is covered by comprehensive insurance.',
-  },
-  {
-    icon: Star,
-    title: 'Trusted Reviews',
-    desc: 'Transparent ratings from real renters help you pick the perfect car every time.',
-  },
-  {
-    icon: Zap,
-    title: 'Instant Booking',
-    desc: 'Skip the counter. Book online, unlock with your phone, and drive away in minutes.',
-  },
-  {
-    icon: MapPin,
-    title: 'Everywhere You Go',
-    desc: 'Cars available in 50+ cities. Find rides near airports, train stations, or your doorstep.',
-  },
-  {
-    icon: CreditCard,
-    title: 'Transparent Pricing',
-    desc: 'No hidden fees. See the full price upfront including insurance and platform fees.',
-  },
-  {
-    icon: Clock,
-    title: '24/7 Support',
-    desc: 'Our support team is always available to help you with any issue, day or night.',
-  },
-];
-
-const HOW_IT_WORKS = [
-  { step: '01', title: 'Search & Discover', desc: 'Browse thousands of cars by location, category, or price.' },
-  { step: '02', title: 'Book Instantly', desc: 'Reserve your ride in seconds with secure online payment.' },
-  { step: '03', title: 'Pick Up & Drive', desc: 'Meet your host or use keyless entry and hit the road.' },
+  { icon: Shield, title: 'Full Insurance', desc: 'Every trip covered with comprehensive protection — zero deductible.' },
+  { icon: Star, title: '5-Star Reviews', desc: 'Transparent ratings from verified renters guide every booking.' },
+  { icon: Clock, title: '24/7 Support', desc: 'Real humans ready to help around the clock, wherever you are.' },
+  { icon: CreditCard, title: 'No Hidden Fees', desc: 'What you see is what you pay. Insurance & fees included upfront.' },
 ];
 
 const TESTIMONIALS = [
-  {
-    name: 'Sarah M.',
-    role: 'Frequent Renter',
-    text: 'DriveShare saved me hundreds compared to traditional rentals. The SUV I rented was immaculate!',
-    rating: 5,
-  },
-  {
-    name: 'James K.',
-    role: 'Car Owner',
-    text: "I earn $800/month sharing my car when I'm not using it. The platform handles everything.",
-    rating: 5,
-  },
-  {
-    name: 'Priya R.',
-    role: 'Business Traveler',
-    text: 'Seamless experience from booking to drop-off. The electric vehicle selection is excellent.',
-    rating: 5,
-  },
+  { name: 'Sarah M.', role: 'Frequent Renter', quote: 'DriveShare saved me hundreds compared to traditional rentals. The SUV was immaculate!' },
+  { name: 'James K.', role: 'Car Owner', quote: "I earn $800/month sharing my car when I'm not using it. The platform handles everything." },
+  { name: 'Priya R.', role: 'Business Traveler', quote: 'Seamless from booking to drop-off. The electric vehicle selection is excellent.' },
 ];
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* ═══════ HERO ═══════ */}
-      <section className="relative min-h-[92vh] flex items-center overflow-hidden bg-accent">
-        {/* Decorative shapes */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[120px] -translate-y-1/3 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-primary/5 blur-[100px] translate-y-1/3 -translate-x-1/4" />
-        <div className="absolute top-20 left-[10%] w-24 h-24 border border-primary/20 rounded-2xl rotate-12 hidden lg:block" />
-        <div className="absolute bottom-32 right-[15%] w-16 h-16 border border-accent-foreground/10 rounded-full hidden lg:block" />
+      {/* ══════════════════════════════════
+          HERO — Full-bleed cinematic
+      ══════════════════════════════════ */}
+      <section className="relative h-[100vh] min-h-[600px] flex items-end overflow-hidden">
+        {/* Background image */}
+        <img
+          src={heroImg}
+          alt="Luxury car on a cinematic night street"
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+        />
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
 
-        {/* Diagonal clip image */}
-        <div className="absolute inset-0 lg:left-[45%]">
-          <div className="absolute inset-0 bg-gradient-to-r from-accent via-accent/90 to-transparent z-10" />
-          <img
-            src={heroImg}
-            alt="Premium car available for rent"
-            className="w-full h-full object-cover"
-            loading="eager"
-          />
-        </div>
-
-        <div className="container relative z-20 py-20">
+        <div className="container relative z-10 pb-20 lg:pb-28">
           <motion.div
-            className="max-w-2xl"
+            className="max-w-3xl"
             initial="hidden"
             animate="visible"
-            variants={fadeUp}
+            variants={stagger}
           >
-            <motion.span
-              variants={fadeUp}
-              custom={0}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6"
-            >
-              <Car className="h-4 w-4" /> The #1 Peer-to-Peer Car Sharing Platform
-            </motion.span>
+            <motion.div variants={fadeUp} custom={0} className="flex items-center gap-3 mb-6">
+              <span className="h-px w-12 bg-primary" />
+              <span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Peer-to-Peer Car Sharing</span>
+            </motion.div>
 
             <motion.h1
               variants={fadeUp}
               custom={1}
-              className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-accent-foreground leading-[1.1]"
+              className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tight leading-[0.95]"
             >
-              Drive Your
-              <span className="relative inline-block ml-3">
-                <span className="text-primary">Dream</span>
-                <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" fill="none">
-                  <path d="M2 8 C50 2, 150 2, 198 8" stroke="hsl(160 84% 39%)" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-              </span>
+              Your Next
               <br />
-              Car Today
+              <span className="text-primary">Ride</span> Awaits
             </motion.h1>
 
             <motion.p
               variants={fadeUp}
               custom={2}
-              className="mt-6 text-lg lg:text-xl text-accent-foreground/70 max-w-lg leading-relaxed"
+              className="mt-6 text-lg lg:text-xl text-muted-foreground max-w-lg leading-relaxed"
             >
               Rent from trusted local hosts or earn by sharing your car.
-              Thousands of vehicles, transparent pricing, fully insured trips.
+              Thousands of vehicles. Transparent pricing. Fully insured.
             </motion.p>
 
-            <motion.div variants={fadeUp} custom={3} className="mt-10 flex flex-wrap gap-4">
+            <motion.div variants={fadeUp} custom={3} className="mt-10 flex flex-wrap items-center gap-4">
               <Link to="/search">
-                <Button size="lg" className="gap-2 text-base h-14 px-8 rounded-xl shadow-lg shadow-primary/25">
-                  Browse Cars <ArrowRight className="h-5 w-5" />
+                <Button size="lg" className="h-14 px-10 text-base rounded-full gap-2 shadow-lg shadow-primary/20">
+                  Explore Cars <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/auth">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="text-base h-14 px-8 rounded-xl border-accent-foreground/20 text-accent-foreground hover:bg-accent-foreground/10"
-                >
-                  List Your Car
+                <Button variant="ghost" size="lg" className="h-14 px-8 text-base rounded-full gap-2 text-foreground hover:text-primary">
+                  <Play className="h-4 w-4 fill-current" /> See How It Works
                 </Button>
               </Link>
             </motion.div>
 
-            <motion.div variants={fadeUp} custom={4} className="mt-8 flex items-center gap-4 text-accent-foreground/60 text-sm">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-secondary border-2 border-accent flex items-center justify-center text-xs font-medium text-secondary-foreground">
-                    {String.fromCharCode(64 + i)}
-                  </div>
-                ))}
-              </div>
-              <span>Trusted by <strong className="text-accent-foreground">10,000+</strong> drivers</span>
+            {/* Floating stats */}
+            <motion.div variants={fadeUp} custom={4} className="mt-14 flex flex-wrap gap-8 lg:gap-14">
+              {[
+                { val: '10K+', label: 'Drivers' },
+                { val: '2,500+', label: 'Cars' },
+                { val: '4.9', label: 'Rating' },
+              ].map((s) => (
+                <div key={s.label}>
+                  <div className="text-2xl lg:text-3xl font-bold">{s.val}</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{s.label}</div>
+                </div>
+              ))}
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* ═══════ STATS BANNER ═══════ */}
-      <section className="relative -mt-1 bg-primary">
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(160_84%_30%),hsl(160_84%_39%),hsl(160_84%_30%))]" />
-        <div className="container relative z-10 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {STATS.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-              >
-                <div className="text-3xl lg:text-4xl font-bold text-primary-foreground">{s.value}</div>
-                <div className="text-sm text-primary-foreground/70 mt-1">{s.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ CATEGORIES ═══════ */}
-      <section className="py-20 lg:py-28 container">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
-          variants={fadeUp}
-          className="text-center mb-12"
-        >
-          <span className="text-primary text-sm font-semibold tracking-widest uppercase">Categories</span>
-          <h2 className="text-3xl lg:text-4xl font-bold mt-2">Find Your Perfect Match</h2>
-          <p className="text-muted-foreground mt-3 max-w-md mx-auto">
-            From daily commuters to weekend getaways — we have the right ride for every occasion.
-          </p>
-        </motion.div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-          {CATEGORIES.map((cat, i) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
-            >
-              <Link to={`/search?category=${cat.name}`}>
-                <Card className="group hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 cursor-pointer overflow-hidden">
-                  <CardContent className={`p-6 bg-gradient-to-br ${cat.gradient} flex flex-col items-center`}>
-                    <div className="h-36 w-full flex items-center justify-center mb-3 overflow-hidden">
-                      <img
-                        src={cat.img}
-                        alt={`${cat.name} category`}
-                        className="h-full w-auto object-contain group-hover:scale-110 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                    </div>
-                    <h3 className="font-bold text-xl group-hover:text-primary transition-colors">{cat.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{cat.count}+ cars</p>
-                    <ChevronRight className="h-5 w-5 mt-3 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                  </CardContent>
-                </Card>
+      {/* ══════════════════════════════════
+          CATEGORIES — Horizontal scroll cards
+      ══════════════════════════════════ */}
+      <section className="py-24 lg:py-32">
+        <div className="container">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-80px' }}
+            variants={stagger}
+          >
+            <motion.div variants={fadeUp} className="flex items-end justify-between mb-12">
+              <div>
+                <span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Browse</span>
+                <h2 className="text-3xl lg:text-5xl font-bold mt-2">Pick Your Style</h2>
+              </div>
+              <Link to="/search" className="hidden sm:flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                View all <ChevronRight className="h-4 w-4" />
               </Link>
             </motion.div>
-          ))}
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              {CATEGORIES.map((cat, i) => (
+                <motion.div key={cat.name} variants={fadeUp} custom={i}>
+                  <Link to={`/search?category=${cat.name}`} className="group block">
+                    <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-card border border-border/50 hover:border-primary/40 transition-all duration-500">
+                      {/* Car image */}
+                      <div className="absolute inset-0 flex items-center justify-center p-6">
+                        <img
+                          src={cat.img}
+                          alt={cat.name}
+                          className="w-full h-auto object-contain group-hover:scale-110 transition-transform duration-700 ease-out"
+                          loading="lazy"
+                        />
+                      </div>
+                      {/* Bottom gradient */}
+                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-card via-card/80 to-transparent" />
+                      {/* Info */}
+                      <div className="absolute bottom-0 inset-x-0 p-5">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">{cat.tag}</span>
+                        <div className="flex items-end justify-between mt-1">
+                          <h3 className="text-xl font-bold">{cat.name}</h3>
+                          <span className="text-sm text-muted-foreground">{cat.count}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ═══════ HOW IT WORKS ═══════ */}
-      <section className="py-20 lg:py-28 bg-accent relative overflow-hidden">
-        {/* Decorative shapes */}
-        <div className="absolute top-10 right-10 w-40 h-40 border border-primary/10 rounded-3xl rotate-45 hidden lg:block" />
-        <div className="absolute bottom-10 left-10 w-20 h-20 bg-primary/5 rounded-full hidden lg:block" />
-
-        <div className="container relative z-10">
+      {/* ══════════════════════════════════
+          HOW IT WORKS — Numbered timeline
+      ══════════════════════════════════ */}
+      <section className="py-24 lg:py-32 border-t border-border/40">
+        <div className="container">
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-100px' }}
-            variants={fadeUp}
-            className="text-center mb-16"
+            viewport={{ once: true, margin: '-80px' }}
+            variants={stagger}
           >
-            <span className="text-primary text-sm font-semibold tracking-widest uppercase">How It Works</span>
-            <h2 className="text-3xl lg:text-4xl font-bold mt-2 text-accent-foreground">Three Simple Steps</h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connecting line */}
-            <div className="hidden md:block absolute top-12 left-[17%] right-[17%] h-0.5 bg-gradient-to-r from-primary/40 via-primary to-primary/40" />
-
-            {HOW_IT_WORKS.map((item, i) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.6 }}
-                className="text-center relative"
-              >
-                <div className="mx-auto mb-6 w-24 h-24 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center relative z-10">
-                  <span className="text-3xl font-bold text-primary">{item.step}</span>
-                </div>
-                <h3 className="text-xl font-bold text-accent-foreground mb-2">{item.title}</h3>
-                <p className="text-accent-foreground/60 max-w-xs mx-auto">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ FEATURES GRID ═══════ */}
-      <section className="py-20 lg:py-28 container">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
-          variants={fadeUp}
-          className="text-center mb-14"
-        >
-          <span className="text-primary text-sm font-semibold tracking-widest uppercase">Why DriveShare</span>
-          <h2 className="text-3xl lg:text-4xl font-bold mt-2">Built for Drivers, by Drivers</h2>
-          <p className="text-muted-foreground mt-3 max-w-lg mx-auto">
-            Every feature is designed to make renting and sharing cars effortless, safe, and affordable.
-          </p>
-        </motion.div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURES.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.5 }}
-            >
-              <Card className="h-full border hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 group">
-                <CardContent className="p-7">
-                  <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <f.icon className="h-7 w-7 text-primary" />
-                  </div>
-                  <h3 className="font-bold text-lg mb-2">{f.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
-                </CardContent>
-              </Card>
+            <motion.div variants={fadeUp} className="max-w-md mb-16">
+              <span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">How It Works</span>
+              <h2 className="text-3xl lg:text-5xl font-bold mt-2">Three steps.<br />Zero hassle.</h2>
             </motion.div>
-          ))}
+
+            <div className="grid md:grid-cols-3 gap-px bg-border/40 rounded-2xl overflow-hidden">
+              {STEPS.map((step, i) => (
+                <motion.div
+                  key={step.num}
+                  variants={fadeUp}
+                  custom={i}
+                  className="bg-card p-8 lg:p-10 group hover:bg-muted/50 transition-colors duration-300"
+                >
+                  <div className="flex items-center gap-4 mb-6">
+                    <span className="text-5xl font-bold text-primary/20 group-hover:text-primary/40 transition-colors">{step.num}</span>
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <step.icon className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">{step.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ═══════ TESTIMONIALS ═══════ */}
-      <section className="py-20 lg:py-28 bg-muted/50 relative overflow-hidden">
-        {/* Decorative blob */}
-        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-primary/5 blur-[80px]" />
-
-        <div className="container relative z-10">
+      {/* ══════════════════════════════════
+          FEATURES — Bento-style grid
+      ══════════════════════════════════ */}
+      <section className="py-24 lg:py-32 border-t border-border/40">
+        <div className="container">
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-100px' }}
-            variants={fadeUp}
-            className="text-center mb-14"
+            viewport={{ once: true, margin: '-80px' }}
+            variants={stagger}
           >
-            <span className="text-primary text-sm font-semibold tracking-widest uppercase">Testimonials</span>
-            <h2 className="text-3xl lg:text-4xl font-bold mt-2">Loved by Thousands</h2>
-          </motion.div>
+            <motion.div variants={fadeUp} className="text-center max-w-lg mx-auto mb-16">
+              <span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Why DriveShare</span>
+              <h2 className="text-3xl lg:text-5xl font-bold mt-2">Built Different</h2>
+              <p className="text-muted-foreground mt-4">Every feature designed to make renting effortless, safe, and affordable.</p>
+            </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.12, duration: 0.5 }}
-              >
-                <Card className="h-full">
-                  <CardContent className="p-7">
-                    <div className="flex gap-1 mb-4">
-                      {Array.from({ length: t.rating }).map((_, s) => (
+            <div className="grid sm:grid-cols-2 gap-4 lg:gap-6">
+              {FEATURES.map((f, i) => (
+                <motion.div
+                  key={f.title}
+                  variants={fadeUp}
+                  custom={i}
+                  className="group relative rounded-2xl border border-border/50 bg-card p-8 lg:p-10 hover:border-primary/30 transition-all duration-300 overflow-hidden"
+                >
+                  {/* Glow on hover */}
+                  <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/5 opacity-0 group-hover:opacity-100 blur-3xl transition-opacity duration-500" />
+                  <div className="relative z-10">
+                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/15 transition-colors">
+                      <f.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2">{f.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════
+          TESTIMONIALS — Minimal quote cards
+      ══════════════════════════════════ */}
+      <section className="py-24 lg:py-32 border-t border-border/40">
+        <div className="container">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-80px' }}
+            variants={stagger}
+          >
+            <motion.div variants={fadeUp} className="mb-14">
+              <span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Reviews</span>
+              <h2 className="text-3xl lg:text-5xl font-bold mt-2">Real Stories</h2>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {TESTIMONIALS.map((t, i) => (
+                <motion.div
+                  key={t.name}
+                  variants={fadeUp}
+                  custom={i}
+                  className="rounded-2xl border border-border/50 bg-card p-8 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex gap-1 mb-5">
+                      {[1, 2, 3, 4, 5].map((s) => (
                         <Star key={s} className="h-4 w-4 fill-primary text-primary" />
                       ))}
                     </div>
-                    <p className="text-foreground/80 leading-relaxed mb-6">"{t.text}"</p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                        {t.name[0]}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-sm">{t.name}</div>
-                        <div className="text-xs text-muted-foreground">{t.role}</div>
-                      </div>
+                    <p className="text-foreground/80 leading-relaxed text-[15px]">"{t.quote}"</p>
+                  </div>
+                  <div className="mt-8 flex items-center gap-3 pt-6 border-t border-border/40">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                      {t.name[0]}
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+                    <div>
+                      <div className="font-semibold text-sm">{t.name}</div>
+                      <div className="text-xs text-muted-foreground">{t.role}</div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ═══════ OWNER CTA BANNER ═══════ */}
-      <section className="py-20 lg:py-28 container">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="relative rounded-3xl overflow-hidden bg-accent p-10 lg:p-16"
-        >
-          {/* Shapes */}
-          <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-primary/10 blur-[80px] translate-x-1/3 -translate-y-1/3" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-primary/5 blur-[60px] -translate-x-1/4 translate-y-1/4" />
-          <div className="absolute top-8 right-12 w-20 h-20 border border-primary/20 rounded-xl rotate-12 hidden lg:block" />
-          <div className="absolute bottom-8 left-20 w-12 h-12 bg-primary/10 rounded-full hidden lg:block" />
-
-          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
-            <div className="max-w-xl">
-              <h2 className="text-3xl lg:text-4xl font-bold text-accent-foreground mb-4">
-                Earn Money with Your Idle Car
-              </h2>
-              <p className="text-accent-foreground/70 text-lg leading-relaxed mb-6">
-                Turn your parked car into a money-making machine. List for free, set your own price,
-                and earn up to $1,200/month. We handle the insurance.
-              </p>
-              <ul className="space-y-2 mb-8">
-                {['Free to list — no upfront costs', 'You set availability & price', 'Comprehensive trip insurance included'].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-accent-foreground/80 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/auth">
-                <Button size="lg" className="gap-2 text-base h-14 px-8 rounded-xl shadow-lg shadow-primary/25">
-                  Start Earning <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-            <div className="flex-shrink-0 hidden lg:flex items-center justify-center">
-              <div className="relative w-56 h-56 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                <Users className="w-20 h-20 text-primary/60" />
-                <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-bold shadow-lg">
-                  $1,200/mo
+      {/* ══════════════════════════════════
+          OWNER CTA — Split layout
+      ══════════════════════════════════ */}
+      <section className="py-24 lg:py-32 border-t border-border/40">
+        <div className="container">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="rounded-3xl bg-card border border-border/50 overflow-hidden"
+          >
+            <div className="grid lg:grid-cols-2">
+              {/* Left — Content */}
+              <div className="p-10 lg:p-16 flex flex-col justify-center">
+                <span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">For Car Owners</span>
+                <h2 className="text-3xl lg:text-4xl font-bold mt-3 leading-tight">
+                  Turn your parked car into <span className="text-primary">$1,200/mo</span>
+                </h2>
+                <p className="text-muted-foreground mt-4 leading-relaxed">
+                  List for free, set your own schedule and price. We handle insurance, payments, and support.
+                </p>
+                <ul className="mt-8 space-y-3">
+                  {['No upfront costs', 'You control availability', 'Comprehensive insurance included'].map((item) => (
+                    <li key={item} className="flex items-center gap-3 text-sm text-foreground/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-10">
+                  <Link to="/auth">
+                    <Button size="lg" className="h-14 px-10 text-base rounded-full gap-2 shadow-lg shadow-primary/20">
+                      Start Earning <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              {/* Right — Visual */}
+              <div className="relative min-h-[300px] lg:min-h-0 bg-muted/30 flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
+                <div className="relative text-center p-10">
+                  <div className="text-7xl lg:text-8xl font-bold text-primary/15">$$$</div>
+                  <div className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-xl shadow-primary/30">
+                    Up to $1,200/mo
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </section>
 
-      {/* ═══════ FINAL CTA ═══════ */}
-      <section className="py-20 lg:py-28 bg-accent relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(160_84%_39%/0.08),transparent_70%)]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-primary/5 rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-primary/10 rounded-full" />
-
+      {/* ══════════════════════════════════
+          FINAL CTA — Minimal & powerful
+      ══════════════════════════════════ */}
+      <section className="py-32 lg:py-44 border-t border-border/40 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,hsl(var(--primary)/0.06),transparent_60%)]" />
         <motion.div
-          initial="hidden"
-          whileInView="visible"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          variants={fadeUp}
+          transition={{ duration: 0.7 }}
           className="container relative z-10 text-center"
         >
-          <h2 className="text-3xl lg:text-5xl font-bold text-accent-foreground mb-5">
-            Ready to Hit the Road?
+          <h2 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight">
+            Ready to <span className="text-primary">drive</span>?
           </h2>
-          <p className="text-accent-foreground/60 mb-10 max-w-md mx-auto text-lg">
+          <p className="text-muted-foreground mt-6 text-lg max-w-md mx-auto">
             Join thousands of drivers and hosts on the most trusted car sharing platform.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="mt-12 flex flex-wrap justify-center gap-4">
             <Link to="/search">
-              <Button size="lg" className="gap-2 text-base h-14 px-10 rounded-xl shadow-lg shadow-primary/25">
+              <Button size="lg" className="h-14 px-12 text-base rounded-full gap-2 shadow-lg shadow-primary/20">
                 Browse Cars <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
             <Link to="/auth">
-              <Button
-                variant="outline"
-                size="lg"
-                className="text-base h-14 px-10 rounded-xl border-accent-foreground/20 text-accent-foreground hover:bg-accent-foreground/10"
-              >
+              <Button variant="outline" size="lg" className="h-14 px-10 text-base rounded-full border-border">
                 Sign Up Free
               </Button>
             </Link>
@@ -487,50 +410,52 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* ═══════ FOOTER ═══════ */}
-      <footer className="border-t border-border/40 bg-accent">
-        <div className="container py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+      {/* ══════════════════════════════════
+          FOOTER
+      ══════════════════════════════════ */}
+      <footer className="border-t border-border/40">
+        <div className="container py-14">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
             <div>
-              <Link to="/" className="flex items-center gap-2 font-bold text-xl text-accent-foreground mb-4">
-                <Car className="h-6 w-6 text-primary" />
+              <Link to="/" className="flex items-center gap-2 font-bold text-xl mb-4">
+                <Car className="h-5 w-5 text-primary" />
                 DriveShare
               </Link>
-              <p className="text-sm text-accent-foreground/50 leading-relaxed">
-                The peer-to-peer car sharing marketplace. Rent or earn — your choice.
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Peer-to-peer car sharing. Rent or earn — your choice.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold text-accent-foreground mb-3 text-sm">Renters</h4>
-              <ul className="space-y-2 text-sm text-accent-foreground/50">
+              <h4 className="font-semibold text-sm mb-4">Renters</h4>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
                 <li><Link to="/search" className="hover:text-primary transition-colors">Browse Cars</Link></li>
-                <li><Link to="/search?category=Luxury" className="hover:text-primary transition-colors">Luxury Collection</Link></li>
-                <li><Link to="/search?category=Electric" className="hover:text-primary transition-colors">Electric Vehicles</Link></li>
+                <li><Link to="/search?category=Luxury" className="hover:text-primary transition-colors">Luxury</Link></li>
+                <li><Link to="/search?category=Electric" className="hover:text-primary transition-colors">Electric</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-accent-foreground mb-3 text-sm">Owners</h4>
-              <ul className="space-y-2 text-sm text-accent-foreground/50">
+              <h4 className="font-semibold text-sm mb-4">Owners</h4>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
                 <li><Link to="/auth" className="hover:text-primary transition-colors">List Your Car</Link></li>
                 <li><Link to="/auth" className="hover:text-primary transition-colors">How It Works</Link></li>
-                <li><Link to="/auth" className="hover:text-primary transition-colors">Insurance Info</Link></li>
+                <li><Link to="/auth" className="hover:text-primary transition-colors">Insurance</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-accent-foreground mb-3 text-sm">Company</h4>
-              <ul className="space-y-2 text-sm text-accent-foreground/50">
-                <li><Link to="/" className="hover:text-primary transition-colors">About Us</Link></li>
-                <li><Link to="/" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
-                <li><Link to="/" className="hover:text-primary transition-colors">Terms of Service</Link></li>
+              <h4 className="font-semibold text-sm mb-4">Company</h4>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
+                <li><Link to="/" className="hover:text-primary transition-colors">About</Link></li>
+                <li><Link to="/" className="hover:text-primary transition-colors">Privacy</Link></li>
+                <li><Link to="/" className="hover:text-primary transition-colors">Terms</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-accent-foreground/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-accent-foreground/40">© 2026 DriveShare. All rights reserved.</p>
-            <div className="flex gap-6 text-sm text-accent-foreground/40">
-              <span>Privacy</span>
-              <span>Terms</span>
-              <span>Support</span>
+          <div className="border-t border-border/40 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">© 2026 DriveShare. All rights reserved.</p>
+            <div className="flex gap-6 text-sm text-muted-foreground">
+              <span className="hover:text-foreground cursor-pointer transition-colors">Privacy</span>
+              <span className="hover:text-foreground cursor-pointer transition-colors">Terms</span>
+              <span className="hover:text-foreground cursor-pointer transition-colors">Support</span>
             </div>
           </div>
         </div>
