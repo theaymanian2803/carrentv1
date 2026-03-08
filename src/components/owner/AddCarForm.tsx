@@ -372,7 +372,7 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
 
       {/* Navigation */}
       <div className="flex justify-between mt-6">
-        <Button variant="outline" onClick={() => step === 0 ? navigate('/owner') : setStep(step - 1)} className="gap-2">
+        <Button variant="outline" onClick={() => step === 0 ? navigate(backPath) : setStep(step - 1)} className="gap-2">
           <ArrowLeft className="h-4 w-4" /> {step === 0 ? 'Cancel' : 'Back'}
         </Button>
         {step < STEPS.length - 1 ? (
