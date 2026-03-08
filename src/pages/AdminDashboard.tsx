@@ -3,9 +3,10 @@ import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users, Car, AlertTriangle, DollarSign, Plus, LayoutDashboard } from 'lucide-react';
+import { Users, Car, AlertTriangle, DollarSign, Plus, LayoutDashboard, CreditCard } from 'lucide-react';
 import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
 import AllListingsTable from '@/components/admin/AllListingsTable';
+import SubscriptionManager from '@/components/admin/SubscriptionManager';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ const AdminDashboard = () => {
           <TabsList>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="listings">Listing Approvals</TabsTrigger>
+            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
           </TabsList>
           <TabsContent value="users" className="mt-4">
@@ -58,6 +60,9 @@ const AdminDashboard = () => {
             <ListingApprovalQueue />
             <h2 className="text-xl font-semibold mt-8 mb-4">All Listings</h2>
             <AllListingsTable />
+          </TabsContent>
+          <TabsContent value="subscriptions" className="mt-4">
+            <SubscriptionManager />
           </TabsContent>
           <TabsContent value="disputes" className="mt-4">
             <Card><CardContent className="p-8 text-center text-muted-foreground">Dispute resolution panel — coming soon.</CardContent></Card>
