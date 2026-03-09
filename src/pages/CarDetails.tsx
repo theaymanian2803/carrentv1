@@ -266,14 +266,6 @@ const CarDetails = () => {
         </div>
       </div>
 
-      {/* Booking Modal */}
-      <BookingModal
-        open={bookingModalOpen}
-        onOpenChange={setBookingModalOpen}
-        carName={`${car.year} ${car.make} ${car.model}`}
-        dailyRate={car.daily_rate}
-        onBook={handleBook}
-      />
     </div>
   );
 };
