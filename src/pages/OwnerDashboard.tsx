@@ -76,7 +76,7 @@ const OwnerDashboard = () => {
                 <FleetGrid onAddCar={handleAddCar} />
               </TabsContent>
               <TabsContent value="bookings" className="mt-4">
-                <Card><CardContent className="p-8 text-center text-muted-foreground">Booking request board — coming soon.</CardContent></Card>
+                <BookingRequestBoard />
               </TabsContent>
               <TabsContent value="calendar" className="mt-4">
                 <Card><CardContent className="p-8 text-center text-muted-foreground">Calendar & dynamic pricing — coming soon.</CardContent></Card>
