@@ -50,7 +50,7 @@ const BookCar = () => {
 
   // Wizard state
   const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState(1);
+  
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [pickupTime, setPickupTime] = useState('10:00 AM');
   const [dropoffTime, setDropoffTime] = useState('10:00 AM');
