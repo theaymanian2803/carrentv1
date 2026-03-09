@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarIcon, Clock, ChevronLeft, ChevronRight, User, Phone, Mail,
   MessageSquare, CheckCircle2, Loader2, Car as CarIcon, Shield, MapPin, Star,
