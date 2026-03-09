@@ -7,6 +7,7 @@ import { Users, Car, AlertTriangle, DollarSign, Plus, LayoutDashboard, CreditCar
 import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
 import AllListingsTable from '@/components/admin/AllListingsTable';
 import SubscriptionManager from '@/components/admin/SubscriptionManager';
+import UserManagement from '@/components/admin/UserManagement';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
