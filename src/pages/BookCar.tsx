@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarIcon, Clock, ChevronLeft, ChevronRight, User, Phone, Mail,
   MessageSquare, CheckCircle2, Loader2, Car as CarIcon, Shield, MapPin, Star,
@@ -38,11 +37,6 @@ const STEPS = [
   { label: 'Confirm', icon: CheckCircle2 },
 ];
 
-const stepVariants = {
-  enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
-  center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
-};
 
 const BookCar = () => {
   const { id } = useParams<{ id: string }>();
@@ -56,7 +50,7 @@ const BookCar = () => {
 
   // Wizard state
   const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState(1);
+  
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [pickupTime, setPickupTime] = useState('10:00 AM');
   const [dropoffTime, setDropoffTime] = useState('10:00 AM');
@@ -111,8 +105,8 @@ const BookCar = () => {
     load();
   }, [id, user]);
 
-  const goNext = () => { setDirection(1); setStep((s) => Math.min(s + 1, 2)); };
-  const goBack = () => { setDirection(-1); setStep((s) => Math.max(s - 1, 0)); };
+  const goNext = () => { setStep((s) => Math.min(s + 1, 2)); };
+  const goBack = () => { setStep((s) => Math.max(s - 1, 0)); };
 
   const handleSubmit = async () => {
     if (!user || !car || !dateRange?.from || !dateRange?.to || !canSubmit) return;
@@ -174,7 +168,7 @@ const BookCar = () => {
                 <div key={s.label} className="flex items-center gap-1 flex-1">
                   <button
                     onClick={() => {
-                      if (i < step) { setDirection(-1); setStep(i); }
+                      if (i < step) { setStep(i); }
                     }}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all w-full',
@@ -196,17 +190,7 @@ const BookCar = () => {
             </div>
 
             {/* Step content */}
-            <div className="relative overflow-hidden rounded-xl border border-border bg-card p-6 min-h-[420px]">
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                  key={step}
-                  custom={direction}
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                >
+            <div className="rounded-xl border border-border bg-card p-6">
                   {/* STEP 0: Dates */}
                   {step === 0 && (
                     <div className="space-y-5">
@@ -348,8 +332,6 @@ const BookCar = () => {
                       </div>
                     </div>
                   )}
-                </motion.div>
-              </AnimatePresence>
             </div>
 
             {/* Navigation buttons */}
