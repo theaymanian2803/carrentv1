@@ -167,7 +167,43 @@ const Navbar = () => {
               <Link to={getDashboardLink()}>
                 <Button variant="ghost" size="sm">Dashboard</Button>
               </Link>
-              <Button variant="outline" size="sm" onClick={signOut}>Sign Out</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
+                      <AvatarFallback className="text-xs">{getInitials(profile?.full_name)}</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden sm:inline">{profile?.full_name || 'User'}</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{profile?.full_name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={getDashboardLink()} className="cursor-pointer">
+                      <Car className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive">
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Link to="/auth">
