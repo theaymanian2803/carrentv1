@@ -4,26 +4,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
+import BookingModal from '@/components/BookingModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { format, differenceInDays, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import {
-  CalendarIcon, ChevronLeft, ChevronRight, MapPin, Star,
-  Fuel, Users, Car as CarIcon, DollarSign, Shield, Loader2,
+  ChevronLeft, ChevronRight, MapPin, Star,
+  Car as CarIcon, Shield,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
 import type { DateRange } from 'react-day-picker';
 
 type CarRow = Tables<'cars'>;
 type ProfileRow = Tables<'profiles'>;
-
-const PLATFORM_FEE_RATE = 0.12; // 12%
 
 const CarDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,9 +31,8 @@ const CarDetails = () => {
   const [owner, setOwner] = useState<ProfileRow | null>(null);
   const [ownerRating, setOwnerRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCar = async () => {
