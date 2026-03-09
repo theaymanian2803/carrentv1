@@ -12,7 +12,6 @@ import {
   Calendar, 
   Car, 
   Clock, 
-  DollarSign, 
   MapPin, 
   User, 
   CheckCircle, 
@@ -27,9 +26,27 @@ type CarRow = Tables<'cars'>;
 type ProfileRow = Tables<'profiles'>;
 
 interface BookingWithDetails extends BookingRow {
-  cars: CarRow;
-  profiles: ProfileRow;
+  car: CarRow;
+  renter: ProfileRow;
 }
+
+const getStatusBadge = (status: string) => {
+  const variants: Record<string, { variant: "default" | "destructive" | "outline" | "secondary", className: string }> = {
+    pending: { variant: 'outline', className: 'border-yellow-200 text-yellow-800 bg-yellow-50' },
+    approved: { variant: 'default', className: 'border-green-200 text-green-800 bg-green-50' },
+    active: { variant: 'default', className: 'border-blue-200 text-blue-800 bg-blue-50' },
+    completed: { variant: 'secondary', className: 'border-gray-200 text-gray-600 bg-gray-50' },
+    cancelled: { variant: 'destructive', className: 'border-red-200 text-red-800 bg-red-50' },
+    disputed: { variant: 'destructive', className: 'border-red-200 text-red-800 bg-red-50' },
+  };
+
+  const config = variants[status] || variants.pending;
+  return (
+    <Badge variant={config.variant} className={config.className}>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </Badge>
+  );
+};
 
 const BookingRequestBoard = () => {
   const { user } = useAuth();
@@ -45,21 +62,71 @@ const BookingRequestBoard = () => {
     if (!user) return;
     
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // Get bookings for cars owned by the current user
+    const { data: bookingData, error: bookingError } = await supabase
       .from('bookings')
-      .select(`
-        *,
-        cars!inner(*),
-        profiles!bookings_renter_id_fkey(*)
-      `)
-      .eq('cars.owner_id', user.id)
+      .select('*')
+      .in('car_id', 
+        await supabase
+          .from('cars')
+          .select('id')
+          .eq('owner_id', user.id)
+          .then(res => res.data?.map(car => car.id) || [])
+      )
       .order('created_at', { ascending: false });
 
-    if (error) {
-      toast({ title: 'Error loading bookings', description: error.message, variant: 'destructive' });
-    } else {
-      setBookings(data as BookingWithDetails[] || []);
+    if (bookingError) {
+      toast({ title: 'Error loading bookings', description: bookingError.message, variant: 'destructive' });
+      setLoading(false);
+      return;
     }
+
+    if (!bookingData || bookingData.length === 0) {
+      setBookings([]);
+      setLoading(false);
+      return;
+    }
+
+    // Get car details for each booking
+    const carIds = [...new Set(bookingData.map(b => b.car_id))];
+    const { data: carData, error: carError } = await supabase
+      .from('cars')
+      .select('*')
+      .in('id', carIds);
+
+    if (carError) {
+      toast({ title: 'Error loading car details', description: carError.message, variant: 'destructive' });
+      setLoading(false);
+      return;
+    }
+
+    // Get renter profiles
+    const renterIds = [...new Set(bookingData.map(b => b.renter_id))];
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', renterIds);
+
+    if (profileError) {
+      toast({ title: 'Error loading renter details', description: profileError.message, variant: 'destructive' });
+      setLoading(false);
+      return;
+    }
+
+    // Combine all data
+    const enrichedBookings: BookingWithDetails[] = bookingData.map(booking => {
+      const car = carData?.find(c => c.id === booking.car_id);
+      const renter = profileData?.find(p => p.id === booking.renter_id);
+      
+      return {
+        ...booking,
+        car: car!,
+        renter: renter!
+      };
+    }).filter(b => b.car && b.renter);
+
+    setBookings(enrichedBookings);
     setLoading(false);
   };
 
@@ -95,24 +162,6 @@ const BookingRequestBoard = () => {
       newSet.delete(bookingId);
       return newSet;
     });
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: "default" | "destructive" | "outline" | "secondary", color: string }> = {
-      pending: { variant: 'outline', color: 'text-yellow-600' },
-      approved: { variant: 'default', color: 'text-green-600' },
-      active: { variant: 'default', color: 'text-blue-600' },
-      completed: { variant: 'secondary', color: 'text-gray-600' },
-      cancelled: { variant: 'destructive', color: 'text-red-600' },
-      disputed: { variant: 'destructive', color: 'text-red-600' },
-    };
-
-    const config = variants[status] || variants.pending;
-    return (
-      <Badge variant={config.variant} className={config.color}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
   };
 
   if (loading) {
@@ -157,7 +206,7 @@ const BookingRequestBoard = () => {
       {pendingBookings.length > 0 && (
         <div>
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Clock className="h-5 w-5 text-yellow-600" />
+            <Clock className="h-5 w-5 text-orange-600" />
             Pending Requests ({pendingBookings.length})
           </h2>
           <div className="space-y-4">
@@ -211,7 +260,7 @@ const BookingCard = ({ booking, onAction, isProcessing, showActions }: BookingCa
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-3">
             <Car className="h-5 w-5 text-primary" />
-            {booking.cars.year} {booking.cars.make} {booking.cars.model}
+            {booking.car.year} {booking.car.make} {booking.car.model}
           </CardTitle>
           {getStatusBadge(booking.status)}
         </div>
@@ -221,11 +270,11 @@ const BookingCard = ({ booking, onAction, isProcessing, showActions }: BookingCa
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarFallback>
-              {booking.profiles.full_name?.[0]?.toUpperCase() || 'R'}
+              {booking.renter.full_name?.[0]?.toUpperCase() || 'R'}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">{booking.profiles.full_name || 'Renter'}</p>
+            <p className="font-medium">{booking.renter.full_name || 'Renter'}</p>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <User className="h-3 w-3" />
               Requested {format(new Date(booking.created_at), 'MMM d')}
@@ -276,7 +325,7 @@ const BookingCard = ({ booking, onAction, isProcessing, showActions }: BookingCa
         {/* Location */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-3.5 w-3.5" />
-          {booking.cars.address}
+          {booking.car.address}
         </div>
 
         {/* Actions for pending bookings */}
