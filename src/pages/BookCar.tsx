@@ -196,17 +196,7 @@ const BookCar = () => {
             </div>
 
             {/* Step content */}
-            <div className="relative overflow-hidden rounded-xl border border-border bg-card p-6 min-h-[420px]">
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                  key={step}
-                  custom={direction}
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                >
+            <div className="rounded-xl border border-border bg-card p-6">
                   {/* STEP 0: Dates */}
                   {step === 0 && (
                     <div className="space-y-5">
