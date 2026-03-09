@@ -4,26 +4,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
+import BookingModal from '@/components/BookingModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { format, differenceInDays, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import {
-  CalendarIcon, ChevronLeft, ChevronRight, MapPin, Star,
-  Fuel, Users, Car as CarIcon, DollarSign, Shield, Loader2,
+  ChevronLeft, ChevronRight, MapPin, Star,
+  Car as CarIcon, Shield,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
 import type { DateRange } from 'react-day-picker';
 
 type CarRow = Tables<'cars'>;
 type ProfileRow = Tables<'profiles'>;
-
-const PLATFORM_FEE_RATE = 0.12; // 12%
 
 const CarDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,9 +31,8 @@ const CarDetails = () => {
   const [owner, setOwner] = useState<ProfileRow | null>(null);
   const [ownerRating, setOwnerRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCar = async () => {
@@ -75,24 +71,19 @@ const CarDetails = () => {
     fetchCar();
   }, [id]);
 
-  const totalDays = dateRange?.from && dateRange?.to
-    ? Math.max(differenceInDays(dateRange.to, dateRange.from), 1)
-    : 0;
-
-  const dailyRate = car?.daily_rate ?? 0;
-  const subtotal = dailyRate * totalDays;
-  const platformFee = Math.round(subtotal * PLATFORM_FEE_RATE * 100) / 100;
-  const totalPrice = subtotal + platformFee;
-  const ownerPayout = subtotal - platformFee;
-
-  const handleBook = async () => {
+  const handleBook = async (
+    dateRange: DateRange,
+    totalDays: number,
+    platformFee: number,
+    totalPrice: number,
+    ownerPayout: number
+  ) => {
     if (!user) {
       navigate('/auth');
       return;
     }
     if (!car || !dateRange?.from || !dateRange?.to) return;
 
-    setBooking(true);
     const { error } = await supabase.from('bookings').insert({
       car_id: car.id,
       renter_id: user.id,
@@ -104,11 +95,11 @@ const CarDetails = () => {
       total_price: totalPrice,
     });
 
-    setBooking(false);
     if (error) {
       toast({ title: 'Booking failed', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Booking requested!', description: 'The host will review your request.' });
+      setBookingModalOpen(false);
       navigate('/renter');
     }
   };
@@ -280,75 +271,23 @@ const CarDetails = () => {
                 <CardTitle className="text-lg">Book this car</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Date range picker */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Select dates</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !dateRange?.from && 'text-muted-foreground'
-                      )}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateRange?.from ? (
-                          dateRange.to ? (
-                            `${format(dateRange.from, 'MMM d')} – ${format(dateRange.to, 'MMM d')}`
-                          ) : (
-                            format(dateRange.from, 'MMM d, yyyy')
-                          )
-                        ) : (
-                          'Pick dates'
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-50" align="start">
-                      <Calendar
-                        mode="range"
-                        selected={dateRange}
-                        onSelect={setDateRange}
-                        numberOfMonths={1}
-                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                        className="p-3"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                <div className="text-center py-4">
+                  <div className="text-3xl font-bold text-primary">${car.daily_rate}</div>
+                  <div className="text-muted-foreground">/day</div>
                 </div>
-
-                {/* Cost breakdown */}
-                {totalDays > 0 && (
-                  <div className="space-y-2 text-sm">
-                    <Separator />
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        ${dailyRate} × {totalDays} day{totalDays > 1 ? 's' : ''}
-                      </span>
-                      <span>${subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Platform fee (12%)</span>
-                      <span>${platformFee.toFixed(2)}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between font-semibold text-base">
-                      <span>Total</span>
-                      <span className="text-primary">${totalPrice.toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
 
                 <Button
                   className="w-full"
                   size="lg"
-                  disabled={!totalDays || booking}
-                  onClick={handleBook}
+                  onClick={() => {
+                    if (!user) {
+                      navigate('/auth');
+                    } else {
+                      setBookingModalOpen(true);
+                    }
+                  }}
                 >
-                  {booking ? (
-                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Booking...</>
-                  ) : !user ? (
-                    'Sign in to book'
-                  ) : (
-                    'Request to Book'
-                  )}
+                  {!user ? 'Sign in to book' : 'Request to Book'}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
@@ -359,6 +298,15 @@ const CarDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      <BookingModal
+        open={bookingModalOpen}
+        onOpenChange={setBookingModalOpen}
+        carName={`${car.year} ${car.make} ${car.model}`}
+        dailyRate={car.daily_rate}
+        onBook={handleBook}
+      />
     </div>
   );
 };
