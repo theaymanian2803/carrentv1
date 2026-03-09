@@ -72,12 +72,7 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
     if (!dateRange?.from || !dateRange?.to || !canSubmit) return;
     setBooking(true);
     await onBook(dateRange, totalDays, platformFee, totalPrice, ownerPayout, {
-      pickupTime,
-      dropoffTime,
-      fullName,
-      phone,
-      email,
-      notes,
+      pickupTime, dropoffTime, fullName, phone, email, notes,
     });
     setBooking(false);
     resetForm();
@@ -102,112 +97,105 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Book {carName}</DialogTitle>
-          <DialogDescription>
-            Complete the booking form to request this vehicle.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-lg p-0 flex flex-col max-h-[85vh]">
+        <div className="p-6 pb-2">
+          <DialogHeader>
+            <DialogTitle>Book {carName}</DialogTitle>
+            <DialogDescription>
+              Step {step} of 3 — {step === 1 ? 'Select dates' : step === 2 ? 'Contact info' : 'Review & confirm'}
+            </DialogDescription>
+          </DialogHeader>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center gap-2 py-2">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <div
-                className={cn(
-                  'h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors',
-                  step === s
-                    ? 'bg-primary text-primary-foreground'
-                    : step > s
-                    ? 'bg-primary/20 text-primary'
-                    : 'bg-muted text-muted-foreground'
+          {/* Progress Steps */}
+          <div className="flex items-center justify-center gap-2 pt-3">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    'h-7 w-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors',
+                    step === s
+                      ? 'bg-primary text-primary-foreground'
+                      : step > s
+                      ? 'bg-primary/20 text-primary'
+                      : 'bg-muted text-muted-foreground'
+                  )}
+                >
+                  {step > s ? <CheckCircle2 className="h-3.5 w-3.5" /> : s}
+                </div>
+                {s < 3 && (
+                  <div className={cn('w-6 h-0.5', step > s ? 'bg-primary' : 'bg-muted')} />
                 )}
-              >
-                {step > s ? <CheckCircle2 className="h-4 w-4" /> : s}
               </div>
-              {s < 3 && (
-                <div className={cn('w-8 h-0.5', step > s ? 'bg-primary' : 'bg-muted')} />
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        <div className="py-4 space-y-4">
-          {/* Step 1: Date & Time Selection */}
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-6 pb-2">
+          {/* Step 1 */}
           {step === 1 && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4" /> Rental Period
-                </Label>
-                <div className="text-sm text-muted-foreground mb-1">
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <span className="text-foreground font-medium">
-                        {format(dateRange.from, 'MMM d, yyyy')} – {format(dateRange.to, 'MMM d, yyyy')}
-                      </span>
-                    ) : (
-                      <span className="text-foreground font-medium">
-                        {format(dateRange.from, 'MMM d, yyyy')} – select return date
-                      </span>
-                    )
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-sm">
+                <CalendarIcon className="h-4 w-4" /> 
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <span className="font-medium">
+                      {format(dateRange.from, 'MMM d')} – {format(dateRange.to, 'MMM d, yyyy')}
+                    </span>
                   ) : (
-                    'Select pickup & return dates'
-                  )}
-                </div>
-                <div className="border rounded-lg p-2 flex justify-center">
-                  <Calendar
-                    mode="range"
-                    selected={dateRange}
-                    onSelect={setDateRange}
-                    numberOfMonths={1}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    className="pointer-events-auto"
-                  />
-                </div>
+                    <span className="font-medium">
+                      {format(dateRange.from, 'MMM d, yyyy')} — now pick return date
+                    </span>
+                  )
+                ) : (
+                  <span className="text-muted-foreground">Select pickup & return dates</span>
+                )}
+              </Label>
+              <div className="border rounded-lg flex justify-center">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={1}
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  className="pointer-events-auto p-2"
+                />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" /> Pickup Time
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> Pickup
                   </Label>
                   <select
                     value={pickupTime}
                     onChange={(e) => setPickupTime(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    {TIME_SLOTS.map((time) => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
+                    {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" /> Return Time
+                <div className="space-y-1">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> Return
                   </Label>
                   <select
                     value={dropoffTime}
                     onChange={(e) => setDropoffTime(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    {TIME_SLOTS.map((time) => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
+                    {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
               </div>
 
               {totalDays > 0 && (
-                <div className="rounded-lg border p-4 bg-muted/50 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      ${dailyRate} × {totalDays} day{totalDays > 1 ? 's' : ''}
-                    </span>
+                <div className="rounded-lg border p-3 bg-muted/50 space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">${dailyRate} × {totalDays} day{totalDays > 1 ? 's' : ''}</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Platform fee (12%)</span>
                     <span>${platformFee.toFixed(2)}</span>
                   </div>
@@ -218,106 +206,53 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
                   </div>
                 </div>
               )}
-
-              <Button
-                className="w-full"
-                disabled={!canProceedStep1}
-                onClick={() => setStep(2)}
-              >
-                Continue to Contact Info
-              </Button>
             </div>
           )}
 
-          {/* Step 2: Contact Information */}
+          {/* Step 2 */}
           {step === 2 && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <User className="h-4 w-4" /> Full Name
-                </Label>
-                <Input
-                  placeholder="Enter your full name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
+                <Label className="flex items-center gap-2"><User className="h-4 w-4" /> Full Name</Label>
+                <Input placeholder="Enter your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
               </div>
-
               <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" /> Phone Number
-                </Label>
-                <Input
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
+                <Label className="flex items-center gap-2"><Phone className="h-4 w-4" /> Phone Number</Label>
+                <Input type="tel" placeholder="Enter your phone number" value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
-
               <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" /> Email Address
-                </Label>
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <Label className="flex items-center gap-2"><Mail className="h-4 w-4" /> Email Address</Label>
+                <Input type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
-
               <div className="space-y-2">
                 <Label>Special Requests (Optional)</Label>
-                <Textarea
-                  placeholder="Any special requests or notes for the owner..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>
-                  Back
-                </Button>
-                <Button className="flex-1" disabled={!canProceedStep2} onClick={() => setStep(3)}>
-                  Review Booking
-                </Button>
+                <Textarea placeholder="Any special requests..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
               </div>
             </div>
           )}
 
-          {/* Step 3: Review & Confirm */}
+          {/* Step 3 */}
           {step === 3 && (
             <div className="space-y-4">
               <div className="rounded-lg border p-4 space-y-3">
-                <h4 className="font-semibold">Booking Summary</h4>
-                
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <h4 className="font-semibold text-sm">Booking Summary</h4>
+                <div className="grid grid-cols-2 gap-1.5 text-sm">
                   <span className="text-muted-foreground">Pickup:</span>
                   <span>{dateRange?.from && format(dateRange.from, 'MMM d, yyyy')} at {pickupTime}</span>
-                  
                   <span className="text-muted-foreground">Return:</span>
                   <span>{dateRange?.to && format(dateRange.to, 'MMM d, yyyy')} at {dropoffTime}</span>
-                  
                   <span className="text-muted-foreground">Duration:</span>
                   <span>{totalDays} day{totalDays > 1 ? 's' : ''}</span>
                 </div>
-
                 <Separator />
-
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-2 gap-1.5 text-sm">
                   <span className="text-muted-foreground">Name:</span>
                   <span>{fullName}</span>
-                  
                   <span className="text-muted-foreground">Phone:</span>
                   <span>{phone}</span>
-                  
                   <span className="text-muted-foreground">Email:</span>
                   <span className="truncate">{email}</span>
                 </div>
-
                 {notes && (
                   <>
                     <Separator />
@@ -327,10 +262,8 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
                     </div>
                   </>
                 )}
-
                 <Separator />
-
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
@@ -347,38 +280,37 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
               </div>
 
               <div className="flex items-start gap-2">
-                <Checkbox
-                  id="terms"
-                  checked={agreeTerms}
-                  onCheckedChange={(checked) => setAgreeTerms(checked === true)}
-                />
+                <Checkbox id="terms" checked={agreeTerms} onCheckedChange={(c) => setAgreeTerms(c === true)} />
                 <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight cursor-pointer">
-                  I agree to the rental terms and conditions. I understand that my booking is subject to host approval.
+                  I agree to the rental terms and conditions. My booking is subject to host approval.
                 </label>
               </div>
+            </div>
+          )}
+        </div>
 
+        {/* Fixed footer with action buttons */}
+        <div className="border-t p-4 bg-background shrink-0">
+          {step === 1 && (
+            <Button className="w-full" disabled={!canProceedStep1} onClick={() => setStep(2)}>
+              Continue to Contact Info
+            </Button>
+          )}
+          {step === 2 && (
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
+              <Button className="flex-1" disabled={!canProceedStep2} onClick={() => setStep(3)}>Review Booking</Button>
+            </div>
+          )}
+          {step === 3 && (
+            <div className="space-y-2">
               <div className="flex gap-3">
-                <Button variant="outline" className="flex-1" onClick={() => setStep(2)}>
-                  Back
-                </Button>
-                <Button
-                  className="flex-1"
-                  disabled={!canSubmit || booking}
-                  onClick={handleSubmit}
-                >
-                  {booking ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...
-                    </>
-                  ) : (
-                    'Confirm Booking'
-                  )}
+                <Button variant="outline" className="flex-1" onClick={() => setStep(2)}>Back</Button>
+                <Button className="flex-1" disabled={!canSubmit || booking} onClick={handleSubmit}>
+                  {booking ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</> : 'Confirm Booking'}
                 </Button>
               </div>
-
-              <p className="text-xs text-muted-foreground text-center">
-                You won't be charged until the host approves your request.
-              </p>
+              <p className="text-xs text-muted-foreground text-center">You won't be charged until the host approves.</p>
             </div>
           )}
         </div>
