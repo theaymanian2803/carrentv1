@@ -15,18 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import type { DateRange } from 'react-day-picker';
 
@@ -58,7 +46,6 @@ const TIME_SLOTS = [
 const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: BookingModalProps) => {
   const [step, setStep] = useState(1);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const [pickupTime, setPickupTime] = useState('10:00 AM');
   const [dropoffTime, setDropoffTime] = useState('10:00 AM');
   const [fullName, setFullName] = useState('');
@@ -111,13 +98,6 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) resetForm();
     onOpenChange(isOpen);
-  };
-
-  const handleDateSelect = (range: DateRange | undefined) => {
-    setDateRange(range);
-    if (range?.from && range?.to) {
-      setCalendarOpen(false);
-    }
   };
 
   return (
@@ -193,35 +173,29 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
                   <Label className="flex items-center gap-2">
                     <Clock className="h-4 w-4" /> Pickup Time
                   </Label>
-                  <Select value={pickupTime} onValueChange={setPickupTime}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIME_SLOTS.map((time) => (
-                        <SelectItem key={time} value={time}>
-                          {time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={pickupTime}
+                    onChange={(e) => setPickupTime(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {TIME_SLOTS.map((time) => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Clock className="h-4 w-4" /> Return Time
                   </Label>
-                  <Select value={dropoffTime} onValueChange={setDropoffTime}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIME_SLOTS.map((time) => (
-                        <SelectItem key={time} value={time}>
-                          {time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={dropoffTime}
+                    onChange={(e) => setDropoffTime(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {TIME_SLOTS.map((time) => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
