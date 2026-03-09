@@ -168,7 +168,7 @@ const BookCar = () => {
                 <div key={s.label} className="flex items-center gap-1 flex-1">
                   <button
                     onClick={() => {
-                      if (i < step) { setDirection(-1); setStep(i); }
+                      if (i < step) { setStep(i); }
                     }}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all w-full',
