@@ -36,6 +36,7 @@ const App = () => (
             <Route path="/admin/page-builder" element={<ProtectedRoute requiredRole="admin"><AdminPageBuilder /></ProtectedRoute>} />
             <Route path="/owner" element={<ProtectedRoute requiredRole="owner"><OwnerDashboard /></ProtectedRoute>} />
             <Route path="/renter" element={<ProtectedRoute requiredRole="renter"><RenterDashboard /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

@@ -260,8 +260,25 @@ const Navbar = () => {
           <div className="border-t pt-3">
             {user ? (
               <>
-                <Link to={getDashboardLink()} className="block py-2 text-sm" onClick={() => setMobileOpen(false)}>Dashboard</Link>
-                <Button variant="outline" size="sm" className="w-full" onClick={() => { signOut(); setMobileOpen(false); }}>Sign Out</Button>
+                <div className="mb-3 px-2">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
+                      <AvatarFallback>{getInitials(profile?.full_name)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-semibold">{profile?.full_name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                </div>
+                <Link to="/profile" className="flex items-center gap-3 py-2 px-2 text-sm" onClick={() => setMobileOpen(false)}>
+                  <UserCircle className="h-4 w-4 text-primary" /> My Profile
+                </Link>
+                <Link to={getDashboardLink()} className="flex items-center gap-3 py-2 px-2 text-sm" onClick={() => setMobileOpen(false)}>
+                  <Car className="h-4 w-4 text-primary" /> Dashboard
+                </Link>
+                <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => { signOut(); setMobileOpen(false); }}>Sign Out</Button>
               </>
             ) : (
               <Link to="/auth" onClick={() => setMobileOpen(false)}>
