@@ -70,39 +70,6 @@ const CarDetails = () => {
     fetchCar();
   }, [id]);
 
-  const handleBook = async (
-    dateRange: DateRange,
-    totalDays: number,
-    platformFee: number,
-    totalPrice: number,
-    ownerPayout: number,
-    _bookingDetails: { pickupTime: string; dropoffTime: string; fullName: string; phone: string; email: string; notes: string }
-  ) => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    if (!car || !dateRange?.from || !dateRange?.to) return;
-
-    const { error } = await supabase.from('bookings').insert({
-      car_id: car.id,
-      renter_id: user.id,
-      start_date: format(dateRange.from, 'yyyy-MM-dd'),
-      end_date: format(dateRange.to, 'yyyy-MM-dd'),
-      total_days: totalDays,
-      platform_fee: platformFee,
-      owner_payout: ownerPayout,
-      total_price: totalPrice,
-    });
-
-    if (error) {
-      toast({ title: 'Booking failed', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Booking requested!', description: 'The host will review your request.' });
-      setBookingModalOpen(false);
-      navigate('/renter');
-    }
-  };
 
   if (loading) {
     return (
