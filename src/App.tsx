@@ -14,6 +14,7 @@ import AdminAddCar from "./pages/AdminAddCar";
 import AdminPageBuilder from "./pages/AdminPageBuilder";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import RenterDashboard from "./pages/RenterDashboard";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
