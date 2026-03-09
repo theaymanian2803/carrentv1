@@ -105,8 +105,8 @@ const BookCar = () => {
     load();
   }, [id, user]);
 
-  const goNext = () => { setDirection(1); setStep((s) => Math.min(s + 1, 2)); };
-  const goBack = () => { setDirection(-1); setStep((s) => Math.max(s - 1, 0)); };
+  const goNext = () => { setStep((s) => Math.min(s + 1, 2)); };
+  const goBack = () => { setStep((s) => Math.max(s - 1, 0)); };
 
   const handleSubmit = async () => {
     if (!user || !car || !dateRange?.from || !dateRange?.to || !canSubmit) return;
