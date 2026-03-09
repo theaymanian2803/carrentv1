@@ -58,8 +58,9 @@ const TIME_SLOTS = [
 const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: BookingModalProps) => {
   const [step, setStep] = useState(1);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [pickupTime, setPickupTime] = useState('');
-  const [dropoffTime, setDropoffTime] = useState('');
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [pickupTime, setPickupTime] = useState('10:00 AM');
+  const [dropoffTime, setDropoffTime] = useState('10:00 AM');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -76,7 +77,7 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
   const totalPrice = subtotal + platformFee;
   const ownerPayout = subtotal - platformFee;
 
-  const canProceedStep1 = dateRange?.from && dateRange?.to && pickupTime && dropoffTime;
+  const canProceedStep1 = dateRange?.from && dateRange?.to;
   const canProceedStep2 = fullName.trim() && phone.trim() && email.trim();
   const canSubmit = canProceedStep1 && canProceedStep2 && agreeTerms;
 
@@ -98,8 +99,8 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
   const resetForm = () => {
     setStep(1);
     setDateRange(undefined);
-    setPickupTime('');
-    setDropoffTime('');
+    setPickupTime('10:00 AM');
+    setDropoffTime('10:00 AM');
     setFullName('');
     setPhone('');
     setEmail('');
@@ -110,6 +111,13 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) resetForm();
     onOpenChange(isOpen);
+  };
+
+  const handleDateSelect = (range: DateRange | undefined) => {
+    setDateRange(range);
+    if (range?.from && range?.to) {
+      setCalendarOpen(false);
+    }
   };
 
   return (
@@ -153,7 +161,7 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
                 <Label className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" /> Rental Period
                 </Label>
-                <Popover>
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -174,14 +182,13 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                  <PopoverContent className="w-auto p-0 z-[100]" align="start" sideOffset={4}>
                     <Calendar
                       mode="range"
                       selected={dateRange}
-                      onSelect={setDateRange}
+                      onSelect={handleDateSelect}
                       numberOfMonths={1}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      className="p-3 pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
