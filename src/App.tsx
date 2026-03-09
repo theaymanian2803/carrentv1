@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Search from "./pages/Search";
 import CarDetails from "./pages/CarDetails";
+import BookCar from "./pages/BookCar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminAddCar from "./pages/AdminAddCar";
 import AdminPageBuilder from "./pages/AdminPageBuilder";
