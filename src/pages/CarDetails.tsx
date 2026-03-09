@@ -76,7 +76,8 @@ const CarDetails = () => {
     totalDays: number,
     platformFee: number,
     totalPrice: number,
-    ownerPayout: number
+    ownerPayout: number,
+    _bookingDetails: { pickupTime: string; dropoffTime: string; fullName: string; phone: string; email: string; notes: string }
   ) => {
     if (!user) {
       navigate('/auth');
