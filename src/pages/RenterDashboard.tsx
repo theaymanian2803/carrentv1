@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
+import ReviewModal from '@/components/ReviewModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
-import { Car, Clock, CheckCircle, DollarSign, MapPin, CalendarDays, XCircle } from 'lucide-react';
+import { Car, Clock, CheckCircle, DollarSign, MapPin, CalendarDays, XCircle, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import type { Tables } from '@/integrations/supabase/types';
@@ -34,25 +35,40 @@ const RenterDashboard = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<BookingWithCar[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewedBookingIds, setReviewedBookingIds] = useState<Set<string>>(new Set());
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState<BookingWithCar | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    const fetch = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*, car:cars(make, model, year, images, address, daily_rate)')
-        .eq('renter_id', user.id)
-        .order('created_at', { ascending: false });
 
-      if (error) {
-        toast({ title: 'Error loading bookings', description: error.message, variant: 'destructive' });
+      const [bookingsRes, reviewsRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('*, car:cars(make, model, year, images, address, daily_rate)')
+          .eq('renter_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('reviews')
+          .select('booking_id')
+          .eq('reviewer_id', user.id),
+      ]);
+
+      if (bookingsRes.error) {
+        toast({ title: 'Error loading bookings', description: bookingsRes.error.message, variant: 'destructive' });
       } else {
-        setBookings((data as unknown as BookingWithCar[]) || []);
+        setBookings((bookingsRes.data as unknown as BookingWithCar[]) || []);
       }
+
+      if (reviewsRes.data) {
+        setReviewedBookingIds(new Set(reviewsRes.data.map(r => r.booking_id)));
+      }
+
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, [user]);
 
   const upcoming = bookings.filter(b => ['pending', 'approved', 'active'].includes(b.status));
@@ -71,14 +87,51 @@ const RenterDashboard = () => {
     }
   };
 
+  const handleOpenReview = (booking: BookingWithCar) => {
+    setReviewBooking(booking);
+    setReviewModalOpen(true);
+  };
+
+  const handleSubmitReview = async (rating: number, comment: string) => {
+    if (!user || !reviewBooking) return;
+
+    // We need the owner_id — fetch from the car
+    const { data: carData } = await supabase
+      .from('cars')
+      .select('owner_id')
+      .eq('id', reviewBooking.car_id)
+      .single();
+
+    if (!carData) {
+      toast({ title: 'Error', description: 'Could not find car owner.', variant: 'destructive' });
+      return;
+    }
+
+    const { error } = await supabase.from('reviews').insert({
+      booking_id: reviewBooking.id,
+      reviewer_id: user.id,
+      reviewee_id: carData.owner_id,
+      rating,
+      comment: comment || null,
+    });
+
+    if (error) {
+      toast({ title: 'Review failed', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Review submitted!', description: 'Thanks for your feedback.' });
+      setReviewedBookingIds(prev => new Set(prev).add(reviewBooking.id));
+      setReviewModalOpen(false);
+    }
+  };
+
   const BookingCard = ({ booking }: { booking: BookingWithCar }) => {
     const car = booking.car;
     const thumb = car?.images?.[0];
+    const hasReview = reviewedBookingIds.has(booking.id);
 
     return (
       <Card className="overflow-hidden">
         <div className="flex flex-col sm:flex-row">
-          {/* Thumbnail */}
           <div
             className="sm:w-48 h-36 sm:h-auto bg-muted flex-shrink-0 cursor-pointer"
             onClick={() => navigate(`/cars/${booking.car_id}`)}
@@ -127,11 +180,23 @@ const RenterDashboard = () => {
               </span>
             </div>
 
-            {booking.status === 'pending' && (
-              <Button variant="outline" size="sm" className="mt-2" onClick={() => handleCancel(booking.id)}>
-                <XCircle className="h-3.5 w-3.5 mr-1" /> Cancel
-              </Button>
-            )}
+            <div className="flex gap-2 mt-2">
+              {booking.status === 'pending' && (
+                <Button variant="outline" size="sm" onClick={() => handleCancel(booking.id)}>
+                  <XCircle className="h-3.5 w-3.5 mr-1" /> Cancel
+                </Button>
+              )}
+              {booking.status === 'completed' && !hasReview && (
+                <Button variant="outline" size="sm" onClick={() => handleOpenReview(booking)}>
+                  <Star className="h-3.5 w-3.5 mr-1" /> Leave Review
+                </Button>
+              )}
+              {booking.status === 'completed' && hasReview && (
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> Reviewed
+                </Badge>
+              )}
+            </div>
           </CardContent>
         </div>
       </Card>
@@ -162,6 +227,10 @@ const RenterDashboard = () => {
       </div>
     );
   };
+
+  const reviewCarName = reviewBooking?.car
+    ? `${reviewBooking.car.year} ${reviewBooking.car.make} ${reviewBooking.car.model}`
+    : 'this car';
 
   return (
     <div className="min-h-screen">
@@ -204,6 +273,13 @@ const RenterDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ReviewModal
+        open={reviewModalOpen}
+        onOpenChange={setReviewModalOpen}
+        carName={reviewCarName}
+        onSubmit={handleSubmitReview}
+      />
     </div>
   );
 };
