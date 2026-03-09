@@ -43,13 +43,17 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        <Tabs defaultValue="users">
+        <Tabs defaultValue="analytics">
           <TabsList>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="listings">Listing Approvals</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
           </TabsList>
+          <TabsContent value="analytics" className="mt-4">
+            <ActivityAnalytics />
+          </TabsContent>
           <TabsContent value="users" className="mt-4">
             <UserManagement />
           </TabsContent>
