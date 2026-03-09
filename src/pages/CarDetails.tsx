@@ -9,14 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
 import {
   ChevronLeft, ChevronRight, MapPin, Star,
   Car as CarIcon, Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
-import type { DateRange } from 'react-day-picker';
 
 type CarRow = Tables<'cars'>;
 type ProfileRow = Tables<'profiles'>;
