@@ -37,11 +37,6 @@ const STEPS = [
   { label: 'Confirm', icon: CheckCircle2 },
 ];
 
-const stepVariants = {
-  enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
-  center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
-};
 
 const BookCar = () => {
   const { id } = useParams<{ id: string }>();
