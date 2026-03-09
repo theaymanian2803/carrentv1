@@ -22,12 +22,28 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      navigate('/');
+    } else if (data.user) {
+      // Fetch user roles to redirect to appropriate dashboard
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id);
+      
+      const roles = rolesData?.map(r => r.role) || [];
+      
+      if (roles.includes('admin')) {
+        navigate('/admin');
+      } else if (roles.includes('owner')) {
+        navigate('/owner');
+      } else {
+        navigate('/renter');
+      }
+      
+      toast({ title: 'Welcome back!', description: 'Successfully signed in.' });
     }
   };
 
