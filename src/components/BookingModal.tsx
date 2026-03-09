@@ -161,37 +161,31 @@ const BookingModal = ({ open, onOpenChange, carName, dailyRate, onBook }: Bookin
                 <Label className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" /> Rental Period
                 </Label>
-                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !dateRange?.from && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateRange?.from ? (
-                        dateRange.to ? (
-                          `${format(dateRange.from, 'MMM d, yyyy')} – ${format(dateRange.to, 'MMM d, yyyy')}`
-                        ) : (
-                          format(dateRange.from, 'MMM d, yyyy')
-                        )
-                      ) : (
-                        'Select pickup & return dates'
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[100]" align="start" sideOffset={4}>
-                    <Calendar
-                      mode="range"
-                      selected={dateRange}
-                      onSelect={handleDateSelect}
-                      numberOfMonths={1}
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <div className="text-sm text-muted-foreground mb-1">
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <span className="text-foreground font-medium">
+                        {format(dateRange.from, 'MMM d, yyyy')} – {format(dateRange.to, 'MMM d, yyyy')}
+                      </span>
+                    ) : (
+                      <span className="text-foreground font-medium">
+                        {format(dateRange.from, 'MMM d, yyyy')} – select return date
+                      </span>
+                    )
+                  ) : (
+                    'Select pickup & return dates'
+                  )}
+                </div>
+                <div className="border rounded-lg p-2 flex justify-center">
+                  <Calendar
+                    mode="range"
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={1}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    className="pointer-events-auto"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
