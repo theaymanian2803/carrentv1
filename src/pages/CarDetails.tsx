@@ -31,7 +31,7 @@ const CarDetails = () => {
   const [ownerRating, setOwnerRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageIndex, setImageIndex] = useState(0);
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  
 
   useEffect(() => {
     const fetchCar = async () => {
