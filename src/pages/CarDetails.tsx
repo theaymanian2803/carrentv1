@@ -271,75 +271,23 @@ const CarDetails = () => {
                 <CardTitle className="text-lg">Book this car</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Date range picker */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Select dates</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !dateRange?.from && 'text-muted-foreground'
-                      )}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateRange?.from ? (
-                          dateRange.to ? (
-                            `${format(dateRange.from, 'MMM d')} – ${format(dateRange.to, 'MMM d')}`
-                          ) : (
-                            format(dateRange.from, 'MMM d, yyyy')
-                          )
-                        ) : (
-                          'Pick dates'
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-50" align="start">
-                      <Calendar
-                        mode="range"
-                        selected={dateRange}
-                        onSelect={setDateRange}
-                        numberOfMonths={1}
-                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                        className="p-3"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                <div className="text-center py-4">
+                  <div className="text-3xl font-bold text-primary">${car.daily_rate}</div>
+                  <div className="text-muted-foreground">/day</div>
                 </div>
-
-                {/* Cost breakdown */}
-                {totalDays > 0 && (
-                  <div className="space-y-2 text-sm">
-                    <Separator />
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        ${dailyRate} × {totalDays} day{totalDays > 1 ? 's' : ''}
-                      </span>
-                      <span>${subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Platform fee (12%)</span>
-                      <span>${platformFee.toFixed(2)}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between font-semibold text-base">
-                      <span>Total</span>
-                      <span className="text-primary">${totalPrice.toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
 
                 <Button
                   className="w-full"
                   size="lg"
-                  disabled={!totalDays || booking}
-                  onClick={handleBook}
+                  onClick={() => {
+                    if (!user) {
+                      navigate('/auth');
+                    } else {
+                      setBookingModalOpen(true);
+                    }
+                  }}
                 >
-                  {booking ? (
-                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Booking...</>
-                  ) : !user ? (
-                    'Sign in to book'
-                  ) : (
-                    'Request to Book'
-                  )}
+                  {!user ? 'Sign in to book' : 'Request to Book'}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
@@ -350,6 +298,15 @@ const CarDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      <BookingModal
+        open={bookingModalOpen}
+        onOpenChange={setBookingModalOpen}
+        carName={`${car.year} ${car.make} ${car.model}`}
+        dailyRate={car.daily_rate}
+        onBook={handleBook}
+      />
     </div>
   );
 };
