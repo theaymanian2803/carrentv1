@@ -50,7 +50,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
           </TabsList>
           <TabsContent value="users" className="mt-4">
-            <Card><CardContent className="p-8 text-center text-muted-foreground">User management table — coming soon.</CardContent></Card>
+            <UserManagement />
           </TabsContent>
           <TabsContent value="listings" className="mt-4">
             <div className="flex justify-end mb-4">
