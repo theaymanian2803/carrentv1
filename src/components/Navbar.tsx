@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Car, LogIn, Menu, X, ChevronDown, Search, Shield, Star, Zap, MapPin, CreditCard, Users, Headphones } from 'lucide-react';
+import { Car, LogIn, Menu, X, ChevronDown, Search, Shield, Star, Zap, MapPin, CreditCard, Users, Headphones, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useState, useRef, useEffect } from 'react';
 
 const BROWSE_ITEMS = [
