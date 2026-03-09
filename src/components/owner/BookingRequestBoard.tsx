@@ -50,7 +50,7 @@ const BookingRequestBoard = () => {
       .select(`
         *,
         cars!inner(*),
-        profiles!inner(*)
+        profiles!bookings_renter_id_fkey(*)
       `)
       .eq('cars.owner_id', user.id)
       .order('created_at', { ascending: false });
@@ -58,7 +58,7 @@ const BookingRequestBoard = () => {
     if (error) {
       toast({ title: 'Error loading bookings', description: error.message, variant: 'destructive' });
     } else {
-      setBookings(data || []);
+      setBookings(data as BookingWithDetails[] || []);
     }
     setLoading(false);
   };
