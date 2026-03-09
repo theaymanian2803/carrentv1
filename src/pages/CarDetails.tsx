@@ -301,15 +301,14 @@ const CarDetails = () => {
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 z-50" align="start">
                       <Calendar
                         mode="range"
                         selected={dateRange}
                         onSelect={setDateRange}
                         numberOfMonths={1}
-                        disabled={(date) => date < addDays(new Date(), 0)}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        className="p-3"
                       />
                     </PopoverContent>
                   </Popover>
