@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Search from "./pages/Search";
 import CarDetails from "./pages/CarDetails";
+import BookCar from "./pages/BookCar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminAddCar from "./pages/AdminAddCar";
 import AdminPageBuilder from "./pages/AdminPageBuilder";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/search" element={<Search />} />
             <Route path="/cars/:id" element={<CarDetails />} />
+            <Route path="/book/:id" element={<ProtectedRoute><BookCar /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/add-car" element={<ProtectedRoute requiredRole="admin"><AdminAddCar /></ProtectedRoute>} />
             <Route path="/admin/page-builder" element={<ProtectedRoute requiredRole="admin"><AdminPageBuilder /></ProtectedRoute>} />

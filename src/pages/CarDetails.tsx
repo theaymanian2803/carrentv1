@@ -4,20 +4,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
-import BookingModal from '@/components/BookingModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
 import {
   ChevronLeft, ChevronRight, MapPin, Star,
   Car as CarIcon, Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
-import type { DateRange } from 'react-day-picker';
 
 type CarRow = Tables<'cars'>;
 type ProfileRow = Tables<'profiles'>;
@@ -32,7 +29,7 @@ const CarDetails = () => {
   const [ownerRating, setOwnerRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageIndex, setImageIndex] = useState(0);
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  
 
   useEffect(() => {
     const fetchCar = async () => {
@@ -71,39 +68,6 @@ const CarDetails = () => {
     fetchCar();
   }, [id]);
 
-  const handleBook = async (
-    dateRange: DateRange,
-    totalDays: number,
-    platformFee: number,
-    totalPrice: number,
-    ownerPayout: number,
-    _bookingDetails: { pickupTime: string; dropoffTime: string; fullName: string; phone: string; email: string; notes: string }
-  ) => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    if (!car || !dateRange?.from || !dateRange?.to) return;
-
-    const { error } = await supabase.from('bookings').insert({
-      car_id: car.id,
-      renter_id: user.id,
-      start_date: format(dateRange.from, 'yyyy-MM-dd'),
-      end_date: format(dateRange.to, 'yyyy-MM-dd'),
-      total_days: totalDays,
-      platform_fee: platformFee,
-      owner_payout: ownerPayout,
-      total_price: totalPrice,
-    });
-
-    if (error) {
-      toast({ title: 'Booking failed', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Booking requested!', description: 'The host will review your request.' });
-      setBookingModalOpen(false);
-      navigate('/renter');
-    }
-  };
 
   if (loading) {
     return (
@@ -284,7 +248,7 @@ const CarDetails = () => {
                     if (!user) {
                       navigate('/auth');
                     } else {
-                      setBookingModalOpen(true);
+                      navigate(`/book/${car.id}`);
                     }
                   }}
                 >
@@ -300,14 +264,6 @@ const CarDetails = () => {
         </div>
       </div>
 
-      {/* Booking Modal */}
-      <BookingModal
-        open={bookingModalOpen}
-        onOpenChange={setBookingModalOpen}
-        carName={`${car.year} ${car.make} ${car.model}`}
-        dailyRate={car.daily_rate}
-        onBook={handleBook}
-      />
     </div>
   );
 };
