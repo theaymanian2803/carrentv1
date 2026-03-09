@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Car, LogIn, Menu, X, ChevronDown, Search, Shield, Star, Zap, MapPin, CreditCard, Users, Headphones } from 'lucide-react';
+import { Car, LogIn, Menu, X, ChevronDown, Search, Shield, Star, Zap, MapPin, CreditCard, Users, Headphones, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useState, useRef, useEffect } from 'react';
 
 const BROWSE_ITEMS = [
@@ -87,7 +89,7 @@ const MegaPanel = ({ items, featured, onClose }: MegaPanelProps) => (
 type PanelKey = 'browse' | 'platform' | null;
 
 const Navbar = () => {
-  const { user, signOut, hasRole } = useAuth();
+  const { user, profile, signOut, hasRole } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<PanelKey>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -97,6 +99,16 @@ const Navbar = () => {
     if (hasRole('admin')) return '/admin';
     if (hasRole('owner')) return '/owner';
     return '/renter';
+  };
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const openPanel = (panel: PanelKey) => {
@@ -155,7 +167,43 @@ const Navbar = () => {
               <Link to={getDashboardLink()}>
                 <Button variant="ghost" size="sm">Dashboard</Button>
               </Link>
-              <Button variant="outline" size="sm" onClick={signOut}>Sign Out</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
+                      <AvatarFallback className="text-xs">{getInitials(profile?.full_name)}</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden sm:inline">{profile?.full_name || 'User'}</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{profile?.full_name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={getDashboardLink()} className="cursor-pointer">
+                      <Car className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive">
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Link to="/auth">
@@ -212,8 +260,25 @@ const Navbar = () => {
           <div className="border-t pt-3">
             {user ? (
               <>
-                <Link to={getDashboardLink()} className="block py-2 text-sm" onClick={() => setMobileOpen(false)}>Dashboard</Link>
-                <Button variant="outline" size="sm" className="w-full" onClick={() => { signOut(); setMobileOpen(false); }}>Sign Out</Button>
+                <div className="mb-3 px-2">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
+                      <AvatarFallback>{getInitials(profile?.full_name)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-semibold">{profile?.full_name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                </div>
+                <Link to="/profile" className="flex items-center gap-3 py-2 px-2 text-sm" onClick={() => setMobileOpen(false)}>
+                  <UserCircle className="h-4 w-4 text-primary" /> My Profile
+                </Link>
+                <Link to={getDashboardLink()} className="flex items-center gap-3 py-2 px-2 text-sm" onClick={() => setMobileOpen(false)}>
+                  <Car className="h-4 w-4 text-primary" /> Dashboard
+                </Link>
+                <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => { signOut(); setMobileOpen(false); }}>Sign Out</Button>
               </>
             ) : (
               <Link to="/auth" onClick={() => setMobileOpen(false)}>

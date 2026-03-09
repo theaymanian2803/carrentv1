@@ -14,6 +14,7 @@ import AdminAddCar from "./pages/AdminAddCar";
 import AdminPageBuilder from "./pages/AdminPageBuilder";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import RenterDashboard from "./pages/RenterDashboard";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/admin/page-builder" element={<ProtectedRoute requiredRole="admin"><AdminPageBuilder /></ProtectedRoute>} />
             <Route path="/owner" element={<ProtectedRoute requiredRole="owner"><OwnerDashboard /></ProtectedRoute>} />
             <Route path="/renter" element={<ProtectedRoute requiredRole="renter"><RenterDashboard /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
