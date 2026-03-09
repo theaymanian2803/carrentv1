@@ -250,7 +250,7 @@ const CarDetails = () => {
                     if (!user) {
                       navigate('/auth');
                     } else {
-                      setBookingModalOpen(true);
+                      navigate(`/book/${car.id}`);
                     }
                   }}
                 >
