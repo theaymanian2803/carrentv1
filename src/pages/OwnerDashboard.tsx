@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Car, Calendar, DollarSign, BarChart3 } from 'lucide-react';
 import FleetGrid from '@/components/owner/FleetGrid';
 import AddCarForm from '@/components/owner/AddCarForm';
+import BookingRequestBoard from '@/components/owner/BookingRequestBoard';
 import PlanBadge from '@/components/owner/PlanBadge';
 import UpgradeModal from '@/components/owner/UpgradeModal';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -75,7 +76,7 @@ const OwnerDashboard = () => {
                 <FleetGrid onAddCar={handleAddCar} />
               </TabsContent>
               <TabsContent value="bookings" className="mt-4">
-                <Card><CardContent className="p-8 text-center text-muted-foreground">Booking request board — coming soon.</CardContent></Card>
+                <BookingRequestBoard />
               </TabsContent>
               <TabsContent value="calendar" className="mt-4">
                 <Card><CardContent className="p-8 text-center text-muted-foreground">Calendar & dynamic pricing — coming soon.</CardContent></Card>
