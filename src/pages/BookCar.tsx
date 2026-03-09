@@ -338,8 +338,6 @@ const BookCar = () => {
                       </div>
                     </div>
                   )}
-                </motion.div>
-              </AnimatePresence>
             </div>
 
             {/* Navigation buttons */}
