@@ -89,7 +89,7 @@ const MegaPanel = ({ items, featured, onClose }: MegaPanelProps) => (
 type PanelKey = 'browse' | 'platform' | null;
 
 const Navbar = () => {
-  const { user, signOut, hasRole } = useAuth();
+  const { user, profile, signOut, hasRole } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<PanelKey>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -99,6 +99,16 @@ const Navbar = () => {
     if (hasRole('admin')) return '/admin';
     if (hasRole('owner')) return '/owner';
     return '/renter';
+  };
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const openPanel = (panel: PanelKey) => {
