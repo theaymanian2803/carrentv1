@@ -45,12 +45,17 @@ const UserManagement = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*, user_roles(role), subscriptions(plan, status)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as unknown as UserWithDetails[];
+      const [profilesRes, rolesRes, subsRes] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('user_roles').select('user_id, role'),
+        supabase.from('subscriptions').select('user_id, plan, status'),
+      ]);
+      if (profilesRes.error) throw profilesRes.error;
+      return (profilesRes.data ?? []).map((p) => ({
+        ...p,
+        user_roles: (rolesRes.data ?? []).filter((r) => r.user_id === p.id).map((r) => ({ role: r.role })),
+        subscriptions: (subsRes.data ?? []).filter((s) => s.user_id === p.id).map((s) => ({ plan: s.plan, status: s.status })),
+      })) as UserWithDetails[];
     },
   });
 
