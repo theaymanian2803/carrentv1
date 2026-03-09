@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Car, Calendar, DollarSign, BarChart3 } from 'lucide-react';
 import FleetGrid from '@/components/owner/FleetGrid';
-import AddCarForm from '@/components/owner/AddCarForm';
+import BookingRequestBoard from '@/components/owner/BookingRequestBoard';
 import PlanBadge from '@/components/owner/PlanBadge';
 import UpgradeModal from '@/components/owner/UpgradeModal';
 import { useSubscription } from '@/hooks/useSubscription';
