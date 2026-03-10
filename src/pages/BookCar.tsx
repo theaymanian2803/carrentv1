@@ -51,7 +51,7 @@ const BookCar = () => {
   // Wizard state
   const [step, setStep] = useState(0);
   
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [pickupTime, setPickupTime] = useState('10:00 AM');
   const [dropoffTime, setDropoffTime] = useState('10:00 AM');
   const [fullName, setFullName] = useState('');
@@ -60,6 +60,16 @@ const BookCar = () => {
   const [notes, setNotes] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleDateSelect = (range: DateRange | undefined) => {
+    console.log('Date selected:', range);
+    if (range?.from && !range?.to) {
+      // Single date clicked — treat as 1-day rental
+      setDateRange({ from: range.from, to: range.from });
+    } else {
+      setDateRange(range);
+    }
+  };
 
   // Calculations
   const totalDays = dateRange?.from && dateRange?.to
@@ -95,7 +105,15 @@ const BookCar = () => {
         supabase.from('reviews').select('rating').eq('reviewee_id', carData.owner_id),
       ]);
 
-      if (profileRes.data) setOwner(profileRes.data);
+      // Pre-fill user info
+      if (profileRes.data) {
+        setOwner(profileRes.data);
+      }
+      // Pre-fill renter's own profile data
+      const { data: myProfile } = await supabase.from('profiles').select('full_name').eq('id', user!.id).single();
+      if (myProfile?.full_name) setFullName(myProfile.full_name);
+      if (user?.email) setEmail(user.email);
+      
       if (ratingRes.data && ratingRes.data.length > 0) {
         const avg = ratingRes.data.reduce((s, r) => s + r.rating, 0) / ratingRes.data.length;
         setOwnerRating(Math.round(avg * 10) / 10);
@@ -215,14 +233,14 @@ const BookCar = () => {
                         )}
                       </div>
 
-                      <div className="border border-border rounded-xl overflow-hidden flex justify-center bg-background">
+                      <div className="border border-border rounded-xl flex justify-center bg-background p-2">
                         <Calendar
                           mode="range"
                           selected={dateRange}
-                          onSelect={setDateRange}
+                          onSelect={handleDateSelect}
                           numberOfMonths={1}
                           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                          className="pointer-events-auto p-3"
+                          className="p-3"
                         />
                       </div>
 
