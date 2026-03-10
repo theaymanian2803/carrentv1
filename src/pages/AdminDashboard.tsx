@@ -47,6 +47,7 @@ const AdminDashboard = () => {
         <Tabs defaultValue="analytics">
           <TabsList>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="listings">Listing Approvals</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
