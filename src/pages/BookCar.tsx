@@ -105,7 +105,15 @@ const BookCar = () => {
         supabase.from('reviews').select('rating').eq('reviewee_id', carData.owner_id),
       ]);
 
-      if (profileRes.data) setOwner(profileRes.data);
+      // Pre-fill user info
+      if (profileRes.data) {
+        setOwner(profileRes.data);
+      }
+      // Pre-fill renter's own profile data
+      const { data: myProfile } = await supabase.from('profiles').select('full_name').eq('id', user!.id).single();
+      if (myProfile?.full_name) setFullName(myProfile.full_name);
+      if (user?.email) setEmail(user.email);
+      
       if (ratingRes.data && ratingRes.data.length > 0) {
         const avg = ratingRes.data.reduce((s, r) => s + r.rating, 0) / ratingRes.data.length;
         setOwnerRating(Math.round(avg * 10) / 10);
