@@ -3,7 +3,7 @@ import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users, Car, AlertTriangle, DollarSign, Plus, LayoutDashboard, CreditCard, BarChart3 } from 'lucide-react';
+import { Users, Car, AlertTriangle, DollarSign, Plus, LayoutDashboard, CreditCard, BarChart3, CalendarCheck } from 'lucide-react';
 import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
 import AllListingsTable from '@/components/admin/AllListingsTable';
 import SubscriptionManager from '@/components/admin/SubscriptionManager';
