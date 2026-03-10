@@ -3,12 +3,13 @@ import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users, Car, AlertTriangle, DollarSign, Plus, LayoutDashboard, CreditCard, BarChart3 } from 'lucide-react';
+import { Users, Car, AlertTriangle, DollarSign, Plus, LayoutDashboard, CreditCard, BarChart3, CalendarCheck } from 'lucide-react';
 import ListingApprovalQueue from '@/components/admin/ListingApprovalQueue';
 import AllListingsTable from '@/components/admin/AllListingsTable';
 import SubscriptionManager from '@/components/admin/SubscriptionManager';
 import UserManagement from '@/components/admin/UserManagement';
 import ActivityAnalytics from '@/components/admin/ActivityAnalytics';
+import BookingManagement from '@/components/admin/BookingManagement';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ const AdminDashboard = () => {
         <Tabs defaultValue="analytics">
           <TabsList>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="listings">Listing Approvals</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
@@ -53,6 +55,9 @@ const AdminDashboard = () => {
           </TabsList>
           <TabsContent value="analytics" className="mt-4">
             <ActivityAnalytics />
+          </TabsContent>
+          <TabsContent value="bookings" className="mt-4">
+            <BookingManagement />
           </TabsContent>
           <TabsContent value="users" className="mt-4">
             <UserManagement />
