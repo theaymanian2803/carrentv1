@@ -51,7 +51,7 @@ const BookCar = () => {
   // Wizard state
   const [step, setStep] = useState(0);
   
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [pickupTime, setPickupTime] = useState('10:00 AM');
   const [dropoffTime, setDropoffTime] = useState('10:00 AM');
   const [fullName, setFullName] = useState('');
@@ -60,6 +60,16 @@ const BookCar = () => {
   const [notes, setNotes] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleDateSelect = (range: DateRange | undefined) => {
+    console.log('Date selected:', range);
+    if (range?.from && !range?.to) {
+      // Single date clicked — treat as 1-day rental
+      setDateRange({ from: range.from, to: range.from });
+    } else {
+      setDateRange(range);
+    }
+  };
 
   // Calculations
   const totalDays = dateRange?.from && dateRange?.to
