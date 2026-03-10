@@ -225,14 +225,14 @@ const BookCar = () => {
                         )}
                       </div>
 
-                      <div className="border border-border rounded-xl overflow-hidden flex justify-center bg-background">
+                      <div className="border border-border rounded-xl flex justify-center bg-background p-2">
                         <Calendar
                           mode="range"
                           selected={dateRange}
-                          onSelect={setDateRange}
+                          onSelect={handleDateSelect}
                           numberOfMonths={1}
                           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                          className="pointer-events-auto p-3"
+                          className="p-3"
                         />
                       </div>
 
