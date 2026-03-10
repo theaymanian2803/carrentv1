@@ -56,6 +56,9 @@ const AdminDashboard = () => {
           <TabsContent value="analytics" className="mt-4">
             <ActivityAnalytics />
           </TabsContent>
+          <TabsContent value="bookings" className="mt-4">
+            <BookingManagement />
+          </TabsContent>
           <TabsContent value="users" className="mt-4">
             <UserManagement />
           </TabsContent>
