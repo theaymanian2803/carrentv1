@@ -9,6 +9,7 @@ import AllListingsTable from '@/components/admin/AllListingsTable';
 import SubscriptionManager from '@/components/admin/SubscriptionManager';
 import UserManagement from '@/components/admin/UserManagement';
 import ActivityAnalytics from '@/components/admin/ActivityAnalytics';
+import BookingManagement from '@/components/admin/BookingManagement';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
