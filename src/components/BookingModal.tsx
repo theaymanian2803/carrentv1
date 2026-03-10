@@ -35,7 +35,7 @@ interface BookingDetails {
   notes: string;
 }
 
-const PLATFORM_FEE_RATE = 0.12;
+const PLATFORM_FEE_RATE = 0;
 
 const TIME_SLOTS = [
   '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
