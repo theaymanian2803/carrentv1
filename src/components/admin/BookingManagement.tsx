@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import {
-  CalendarIcon, CheckCircle2, XCircle, Clock, AlertTriangle, Car, User,
+  CalendarIcon, CheckCircle2, XCircle, Clock, AlertTriangle, Car, User, Phone, Mail,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import type { Database } from '@/integrations/supabase/types';
