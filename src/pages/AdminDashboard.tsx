@@ -18,19 +18,18 @@ const AdminDashboard = () => {
       <Navbar />
       <div className="container py-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold">Tableau de bord admin</h1>
           <Button onClick={() => navigate('/admin/page-builder')} variant="outline" className="gap-2">
-            <LayoutDashboard className="h-4 w-4" /> Page Builder
+            <LayoutDashboard className="h-4 w-4" /> Éditeur de page
           </Button>
         </div>
 
-        {/* Overview cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { title: 'Total Revenue', value: '$0', icon: DollarSign, color: 'text-primary' },
-            { title: 'Active Users', value: '0', icon: Users, color: 'text-blue-500' },
-            { title: 'Total Bookings', value: '0', icon: Car, color: 'text-amber-500' },
-            { title: 'Open Disputes', value: '0', icon: AlertTriangle, color: 'text-destructive' },
+            { title: 'Revenu total', value: '0 $', icon: DollarSign, color: 'text-primary' },
+            { title: 'Utilisateurs actifs', value: '0', icon: Users, color: 'text-blue-500' },
+            { title: 'Total réservations', value: '0', icon: Car, color: 'text-amber-500' },
+            { title: 'Litiges ouverts', value: '0', icon: AlertTriangle, color: 'text-destructive' },
           ].map((m) => (
             <Card key={m.title}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -46,12 +45,12 @@ const AdminDashboard = () => {
 
         <Tabs defaultValue="analytics">
           <TabsList>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="users">User Management</TabsTrigger>
-            <TabsTrigger value="listings">Listing Approvals</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="disputes">Disputes</TabsTrigger>
+            <TabsTrigger value="analytics">Analytiques</TabsTrigger>
+            <TabsTrigger value="bookings">Réservations</TabsTrigger>
+            <TabsTrigger value="users">Gestion des utilisateurs</TabsTrigger>
+            <TabsTrigger value="listings">Approbation des annonces</TabsTrigger>
+            <TabsTrigger value="subscriptions">Abonnements</TabsTrigger>
+            <TabsTrigger value="disputes">Litiges</TabsTrigger>
           </TabsList>
           <TabsContent value="analytics" className="mt-4">
             <ActivityAnalytics />
@@ -65,18 +64,18 @@ const AdminDashboard = () => {
           <TabsContent value="listings" className="mt-4">
             <div className="flex justify-end mb-4">
               <Button onClick={() => navigate('/admin/add-car')} className="gap-2">
-                <Plus className="h-4 w-4" /> Add Listing
+                <Plus className="h-4 w-4" /> Ajouter une annonce
               </Button>
             </div>
             <ListingApprovalQueue />
-            <h2 className="text-xl font-semibold mt-8 mb-4">All Listings</h2>
+            <h2 className="text-xl font-semibold mt-8 mb-4">Toutes les annonces</h2>
             <AllListingsTable />
           </TabsContent>
           <TabsContent value="subscriptions" className="mt-4">
             <SubscriptionManager />
           </TabsContent>
           <TabsContent value="disputes" className="mt-4">
-            <Card><CardContent className="p-8 text-center text-muted-foreground">Dispute resolution panel — coming soon.</CardContent></Card>
+            <Card><CardContent className="p-8 text-center text-muted-foreground">Panel de résolution des litiges — bientôt disponible.</CardContent></Card>
           </TabsContent>
         </Tabs>
       </div>

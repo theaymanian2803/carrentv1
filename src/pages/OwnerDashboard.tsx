@@ -28,7 +28,7 @@ const OwnerDashboard = () => {
       <Navbar />
       <div className="container py-8">
         <h1 className="text-3xl font-bold mb-6">
-          {showAddCar ? 'List a New Car' : 'Owner Dashboard'}
+          {showAddCar ? 'Ajouter une nouvelle voiture' : 'Tableau de bord propriétaire'}
         </h1>
 
         {!showAddCar && !sub.loading && (
@@ -48,10 +48,10 @@ const OwnerDashboard = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {[
-                { title: 'Monthly Earnings', value: '$0', icon: DollarSign },
-                { title: 'Active Listings', value: String(sub.listingCount), icon: Car },
-                { title: 'Upcoming Bookings', value: '0', icon: Calendar },
-                { title: 'Conversion Rate', value: '0%', icon: BarChart3 },
+                { title: 'Revenus mensuels', value: '0 $', icon: DollarSign },
+                { title: 'Annonces actives', value: String(sub.listingCount), icon: Car },
+                { title: 'Réservations à venir', value: '0', icon: Calendar },
+                { title: 'Taux de conversion', value: '0%', icon: BarChart3 },
               ].map((m) => (
                 <Card key={m.title}>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -67,10 +67,10 @@ const OwnerDashboard = () => {
 
             <Tabs defaultValue="fleet">
               <TabsList>
-                <TabsTrigger value="fleet">Fleet Management</TabsTrigger>
-                <TabsTrigger value="bookings">Booking Requests</TabsTrigger>
-                <TabsTrigger value="calendar">Calendar & Pricing</TabsTrigger>
-                <TabsTrigger value="payouts">Payouts</TabsTrigger>
+                <TabsTrigger value="fleet">Gestion de flotte</TabsTrigger>
+                <TabsTrigger value="bookings">Demandes de réservation</TabsTrigger>
+                <TabsTrigger value="calendar">Calendrier & Tarifs</TabsTrigger>
+                <TabsTrigger value="payouts">Paiements</TabsTrigger>
               </TabsList>
               <TabsContent value="fleet" className="mt-4">
                 <FleetGrid onAddCar={handleAddCar} />
@@ -79,10 +79,10 @@ const OwnerDashboard = () => {
                 <BookingRequestBoard />
               </TabsContent>
               <TabsContent value="calendar" className="mt-4">
-                <Card><CardContent className="p-8 text-center text-muted-foreground">Calendar & dynamic pricing — coming soon.</CardContent></Card>
+                <Card><CardContent className="p-8 text-center text-muted-foreground">Calendrier & tarification dynamique — bientôt disponible.</CardContent></Card>
               </TabsContent>
               <TabsContent value="payouts" className="mt-4">
-                <Card><CardContent className="p-8 text-center text-muted-foreground">PayPal payouts — coming soon.</CardContent></Card>
+                <Card><CardContent className="p-8 text-center text-muted-foreground">Paiements PayPal — bientôt disponible.</CardContent></Card>
               </TabsContent>
             </Tabs>
           </>
