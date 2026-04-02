@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import {
-  CalendarIcon, CheckCircle2, XCircle, Clock, AlertTriangle, Car, User,
+  CalendarIcon, CheckCircle2, XCircle, Clock, AlertTriangle, Car, User, Phone, Mail,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import type { Database } from '@/integrations/supabase/types';
@@ -280,14 +280,37 @@ const BookingManagement = () => {
               <Separator />
 
               {/* Renter */}
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                  {selected.renter?.full_name?.[0]?.toUpperCase() || '?'}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                    {selected.renter?.full_name?.[0]?.toUpperCase() || '?'}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{selected.renter?.full_name || 'Unknown'}</p>
+                    <p className="text-xs text-muted-foreground">Renter</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-sm">{selected.renter?.full_name || 'Unknown'}</p>
-                  <p className="text-xs text-muted-foreground">Renter</p>
-                </div>
+                {(selected.renter_phone || selected.renter_email) && (
+                  <div className="grid grid-cols-2 gap-y-2 text-sm pl-[52px]">
+                    {selected.renter_phone && (
+                      <>
+                        <span className="text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> Phone</span>
+                        <a href={`tel:${selected.renter_phone}`} className="text-right font-medium text-primary hover:underline">{selected.renter_phone}</a>
+                      </>
+                    )}
+                    {selected.renter_email && (
+                      <>
+                        <span className="text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" /> Email</span>
+                        <a href={`mailto:${selected.renter_email}`} className="text-right font-medium text-primary hover:underline truncate">{selected.renter_email}</a>
+                      </>
+                    )}
+                  </div>
+                )}
+                {selected.renter_notes && (
+                  <div className="pl-[52px]">
+                    <p className="text-xs text-muted-foreground">Notes: {selected.renter_notes}</p>
+                  </div>
+                )}
               </div>
 
               <Separator />
