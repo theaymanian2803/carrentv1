@@ -15,6 +15,7 @@ import type { Tables } from '@/integrations/supabase/types';
 type CarRow = Tables<'cars'>;
 
 const CATEGORIES = ['SUV', 'Sedan', 'Luxury', 'Electric'];
+const CAT_LABELS: Record<string, string> = { SUV: 'SUV', Sedan: 'Berline', Luxury: 'Luxe', Electric: 'Électrique' };
 
 const Search = () => {
   const [searchParams] = useSearchParams();
@@ -60,31 +61,31 @@ const Search = () => {
     <div className="min-h-screen">
       <Navbar />
       <div className="container py-8">
-        {/* Search bar */}
+        {/* Barre de recherche */}
         <Card className="mb-6">
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex-1 relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by location..."
+                  placeholder="Rechercher par lieu..."
                   className="pl-10"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                 />
               </div>
               <Button onClick={fetchCars} className="gap-2">
-                <SearchIcon className="h-4 w-4" /> Search
+                <SearchIcon className="h-4 w-4" /> Rechercher
               </Button>
             </div>
           </CardContent>
         </Card>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Filters sidebar */}
+          {/* Filtres */}
           <div className="space-y-6">
             <div>
-              <h3 className="font-semibold text-sm mb-3">Max Price: ${maxPrice}/day</h3>
+              <h3 className="font-semibold text-sm mb-3">Prix max : {maxPrice} $/jour</h3>
               <Slider
                 value={[maxPrice]}
                 onValueChange={(v) => setMaxPrice(v[0])}
@@ -95,7 +96,7 @@ const Search = () => {
             </div>
 
             <div>
-              <h3 className="font-semibold text-sm mb-3">Category</h3>
+              <h3 className="font-semibold text-sm mb-3">Catégorie</h3>
               <div className="space-y-2">
                 {CATEGORIES.map((cat) => (
                   <div key={cat} className="flex items-center gap-2">
@@ -104,22 +105,22 @@ const Search = () => {
                       checked={selectedCategories.includes(cat)}
                       onCheckedChange={() => toggleCategory(cat)}
                     />
-                    <label htmlFor={`cat-${cat}`} className="text-sm cursor-pointer">{cat}</label>
+                    <label htmlFor={`cat-${cat}`} className="text-sm cursor-pointer">{CAT_LABELS[cat] || cat}</label>
                   </div>
                 ))}
               </div>
             </div>
 
             <Button onClick={fetchCars} variant="secondary" className="w-full">
-              Apply Filters
+              Appliquer les filtres
             </Button>
           </div>
 
-          {/* Results */}
+          {/* Résultats */}
           <div className="lg:col-span-3">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">
-                {loading ? 'Searching...' : `${cars.length} car${cars.length !== 1 ? 's' : ''} found`}
+                {loading ? 'Recherche en cours...' : `${cars.length} voiture${cars.length !== 1 ? 's' : ''} trouvée${cars.length !== 1 ? 's' : ''}`}
               </h2>
             </div>
 
@@ -139,8 +140,8 @@ const Search = () => {
               <Card>
                 <CardContent className="py-16 text-center">
                   <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-                  <h3 className="font-semibold text-lg mb-2">No cars found</h3>
-                  <p className="text-muted-foreground">Try adjusting your filters or search area.</p>
+                  <h3 className="font-semibold text-lg mb-2">Aucune voiture trouvée</h3>
+                  <p className="text-muted-foreground">Essayez d'ajuster vos filtres ou votre zone de recherche.</p>
                 </CardContent>
               </Card>
             ) : (
@@ -161,7 +162,7 @@ const Search = () => {
                           </div>
                         )}
                         <Badge className="absolute top-2 right-2" variant="secondary">
-                          {car.category}
+                          {CAT_LABELS[car.category] || car.category}
                         </Badge>
                       </div>
                       <CardContent className="p-4">
@@ -169,10 +170,10 @@ const Search = () => {
                           {car.year} {car.make} {car.model}
                         </h3>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                          <MapPin className="h-3 w-3" /> {car.address || 'Location not set'}
+                          <MapPin className="h-3 w-3" /> {car.address || 'Lieu non défini'}
                         </div>
                         <div className="flex items-center justify-between mt-3">
-                          <span className="font-bold text-primary text-lg">${car.daily_rate}<span className="text-sm font-normal text-muted-foreground">/day</span></span>
+                          <span className="font-bold text-primary text-lg">{car.daily_rate} $<span className="text-sm font-normal text-muted-foreground">/jour</span></span>
                         </div>
                       </CardContent>
                     </Card>

@@ -25,9 +25,8 @@ const Auth = () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else if (data.user) {
-      // Fetch user roles to redirect to appropriate dashboard
       const { data: rolesData } = await supabase
         .from('user_roles')
         .select('role')
@@ -43,7 +42,7 @@ const Auth = () => {
         navigate('/renter');
       }
       
-      toast({ title: 'Welcome back!', description: 'Successfully signed in.' });
+      toast({ title: 'Bon retour !', description: 'Connexion réussie.' });
     }
   };
 
@@ -60,9 +59,8 @@ const Auth = () => {
     });
     setLoading(false);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else if (data.user) {
-      // Redirect based on selected role
       if (role === 'owner') {
         navigate('/owner');
       } else {
@@ -70,8 +68,8 @@ const Auth = () => {
       }
       
       toast({ 
-        title: 'Account created!', 
-        description: 'Welcome to DriveShare. Start exploring now.' 
+        title: 'Compte créé !', 
+        description: 'Bienvenue sur DriveShare. Commencez à explorer maintenant.' 
       });
     }
   };
@@ -85,14 +83,14 @@ const Auth = () => {
             <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
               <Car className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Welcome to DriveShare</CardTitle>
-            <CardDescription>Sign in or create an account</CardDescription>
+            <CardTitle className="text-2xl">Bienvenue sur DriveShare</CardTitle>
+            <CardDescription>Connectez-vous ou créez un compte</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signin">Connexion</TabsTrigger>
+                <TabsTrigger value="signup">Inscription</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin">
@@ -102,11 +100,11 @@ const Auth = () => {
                     <Input id="signin-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="signin-password">Mot de passe</Label>
                     <Input id="signin-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Signing in...' : 'Sign In'}
+                    {loading ? 'Connexion en cours...' : 'Se connecter'}
                   </Button>
                 </form>
               </TabsContent>
@@ -114,7 +112,7 @@ const Auth = () => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label htmlFor="signup-name">Nom complet</Label>
                     <Input id="signup-name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
                   </div>
                   <div className="space-y-2">
@@ -122,23 +120,23 @@ const Auth = () => {
                     <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">Mot de passe</Label>
                     <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
                   </div>
                   <div className="space-y-2">
-                    <Label>I want to</Label>
+                    <Label>Je souhaite</Label>
                     <Select value={role} onValueChange={(v) => setRole(v as 'owner' | 'renter')}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="renter">Rent cars</SelectItem>
-                        <SelectItem value="owner">List my cars</SelectItem>
+                        <SelectItem value="renter">Louer des voitures</SelectItem>
+                        <SelectItem value="owner">Mettre mes voitures en location</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Creating account...' : 'Create Account'}
+                    {loading ? 'Création du compte...' : 'Créer un compte'}
                   </Button>
                 </form>
               </TabsContent>
