@@ -23,7 +23,7 @@ const PlanBadge = ({ plan, listingCount, listingLimit, onUpgradeClick }: PlanBad
           </Badge>
         ) : (
           <Badge variant="secondary" className="gap-1">
-            <Zap className="h-3 w-3" /> Free
+            <Zap className="h-3 w-3" /> Gratuit
           </Badge>
         )}
       </div>
@@ -31,10 +31,10 @@ const PlanBadge = ({ plan, listingCount, listingLimit, onUpgradeClick }: PlanBad
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between text-sm mb-1">
           <span className="text-muted-foreground">
-            {listingCount}/{listingLimit} listings used
+            {listingCount}/{listingLimit} annonces utilisées
           </span>
           {isAtLimit && plan === 'free' && (
-            <span className="text-destructive text-xs font-medium">Limit reached</span>
+            <span className="text-destructive text-xs font-medium">Limite atteinte</span>
           )}
         </div>
         <Progress value={percentage} className="h-2" />
@@ -42,7 +42,7 @@ const PlanBadge = ({ plan, listingCount, listingLimit, onUpgradeClick }: PlanBad
 
       {plan === 'free' && (
         <Button variant="outline" size="sm" onClick={onUpgradeClick} className="gap-1.5 shrink-0">
-          <Crown className="h-3.5 w-3.5" /> Upgrade
+          <Crown className="h-3.5 w-3.5" /> Passer au Pro
         </Button>
       )}
     </div>
