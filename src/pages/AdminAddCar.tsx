@@ -6,7 +6,7 @@ const AdminAddCar = () => {
     <div className="min-h-screen">
       <Navbar />
       <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-8">Add New Listing</h1>
+        <h1 className="text-3xl font-bold mb-8">Ajouter une nouvelle annonce</h1>
         <AddCarForm backPath="/admin" defaultStatus="live" />
       </div>
     </div>

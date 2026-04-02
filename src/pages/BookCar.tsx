@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import {
   CalendarIcon, Clock, ChevronLeft, ChevronRight, User, Phone, Mail,
   MessageSquare, CheckCircle2, Loader2, Car as CarIcon, Shield, MapPin, Star,
@@ -26,17 +27,16 @@ type ProfileRow = Tables<'profiles'>;
 
 const PLATFORM_FEE_RATE = 0;
 const TIME_SLOTS = [
-  '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-  '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM',
-  '06:00 PM', '07:00 PM', '08:00 PM',
+  '08:00', '09:00', '10:00', '11:00', '12:00',
+  '13:00', '14:00', '15:00', '16:00', '17:00',
+  '18:00', '19:00', '20:00',
 ];
 
 const STEPS = [
   { label: 'Dates', icon: CalendarIcon },
-  { label: 'Details', icon: User },
-  { label: 'Confirm', icon: CheckCircle2 },
+  { label: 'Détails', icon: User },
+  { label: 'Confirmation', icon: CheckCircle2 },
 ];
-
 
 const BookCar = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,12 +48,11 @@ const BookCar = () => {
   const [ownerRating, setOwnerRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Wizard state
   const [step, setStep] = useState(0);
   
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [pickupTime, setPickupTime] = useState('10:00 AM');
-  const [dropoffTime, setDropoffTime] = useState('10:00 AM');
+  const [pickupTime, setPickupTime] = useState('10:00');
+  const [dropoffTime, setDropoffTime] = useState('10:00');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -62,16 +61,13 @@ const BookCar = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const handleDateSelect = (range: DateRange | undefined) => {
-    console.log('Date selected:', range);
     if (range?.from && !range?.to) {
-      // Single date clicked — treat as 1-day rental
       setDateRange({ from: range.from, to: range.from });
     } else {
       setDateRange(range);
     }
   };
 
-  // Calculations
   const totalDays = dateRange?.from && dateRange?.to
     ? Math.max(differenceInDays(dateRange.to, dateRange.from), 1)
     : 0;
@@ -94,7 +90,7 @@ const BookCar = () => {
         .from('cars').select('*').eq('id', id).single();
 
       if (error || !carData) {
-        toast({ title: 'Car not found', variant: 'destructive' });
+        toast({ title: 'Voiture introuvable', variant: 'destructive' });
         navigate('/search');
         return;
       }
@@ -105,11 +101,7 @@ const BookCar = () => {
         supabase.from('reviews').select('rating').eq('reviewee_id', carData.owner_id),
       ]);
 
-      // Pre-fill user info
-      if (profileRes.data) {
-        setOwner(profileRes.data);
-      }
-      // Pre-fill renter's own profile data
+      if (profileRes.data) setOwner(profileRes.data);
       const { data: myProfile } = await supabase.from('profiles').select('full_name').eq('id', user!.id).single();
       if (myProfile?.full_name) setFullName(myProfile.full_name);
       if (user?.email) setEmail(user.email);
@@ -145,9 +137,9 @@ const BookCar = () => {
     } as any);
 
     if (error) {
-      toast({ title: 'Booking failed', description: error.message, variant: 'destructive' });
+      toast({ title: 'Échec de la réservation', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Booking requested!', description: 'The host will review your request shortly.' });
+      toast({ title: 'Réservation envoyée !', description: 'L\'hôte examinera votre demande sous peu.' });
       navigate('/renter');
     }
     setSubmitting(false);
@@ -169,28 +161,24 @@ const BookCar = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top bar */}
       <div className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="container max-w-6xl flex items-center justify-between h-16 px-4">
           <Button variant="ghost" size="sm" onClick={() => navigate(`/cars/${id}`)} className="gap-2 text-muted-foreground hover:text-foreground">
-            <ChevronLeft className="h-4 w-4" /> Back to listing
+            <ChevronLeft className="h-4 w-4" /> Retour à l'annonce
           </Button>
-          <span className="text-sm font-medium text-muted-foreground">Secure Booking</span>
+          <span className="text-sm font-medium text-muted-foreground">Réservation sécurisée</span>
         </div>
       </div>
 
       <div className="container max-w-6xl py-8 px-4">
         <div className="grid lg:grid-cols-5 gap-8">
-          {/* LEFT: Wizard */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Step indicator */}
+            {/* Indicateur d'étapes */}
             <div className="flex items-center gap-1">
               {STEPS.map((s, i) => (
                 <div key={s.label} className="flex items-center gap-1 flex-1">
                   <button
-                    onClick={() => {
-                      if (i < step) { setStep(i); }
-                    }}
+                    onClick={() => { if (i < step) setStep(i); }}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all w-full',
                       step === i
@@ -210,167 +198,163 @@ const BookCar = () => {
               ))}
             </div>
 
-            {/* Step content */}
             <div className="rounded-xl border border-border bg-card p-6">
-                  {/* STEP 0: Dates */}
-                  {step === 0 && (
-                    <div className="space-y-5">
-                      <div>
-                        <h2 className="text-xl font-bold">When do you need the car?</h2>
-                        <p className="text-muted-foreground text-sm mt-1">Pick your trip dates and preferred times.</p>
-                      </div>
+              {/* ÉTAPE 0 : Dates */}
+              {step === 0 && (
+                <div className="space-y-5">
+                  <div>
+                    <h2 className="text-xl font-bold">Quand avez-vous besoin de la voiture ?</h2>
+                    <p className="text-muted-foreground text-sm mt-1">Choisissez vos dates et horaires préférés.</p>
+                  </div>
 
-                      <div className="flex items-center gap-2 text-sm">
-                        <CalendarIcon className="h-4 w-4 text-primary" />
-                        {dateRange?.from ? (
-                          dateRange.to ? (
-                            <span className="font-medium">
-                              {format(dateRange.from, 'MMM d')} – {format(dateRange.to, 'MMM d, yyyy')}
-                              <span className="text-muted-foreground ml-2">({totalDays} day{totalDays > 1 ? 's' : ''})</span>
-                            </span>
-                          ) : (
-                            <span className="text-primary font-medium">Now pick your return date</span>
-                          )
-                        ) : (
-                          <span className="text-muted-foreground">Select pickup & return dates</span>
-                        )}
-                      </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CalendarIcon className="h-4 w-4 text-primary" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <span className="font-medium">
+                          {format(dateRange.from, 'd MMM', { locale: fr })} – {format(dateRange.to, 'd MMM yyyy', { locale: fr })}
+                          <span className="text-muted-foreground ml-2">({totalDays} jour{totalDays > 1 ? 's' : ''})</span>
+                        </span>
+                      ) : (
+                        <span className="text-primary font-medium">Choisissez la date de retour</span>
+                      )
+                    ) : (
+                      <span className="text-muted-foreground">Sélectionnez les dates de prise en charge et de retour</span>
+                    )}
+                  </div>
 
-                      <div className="border border-border rounded-xl flex justify-center bg-background p-2">
-                        <Calendar
-                          mode="range"
-                          selected={dateRange}
-                          onSelect={handleDateSelect}
-                          numberOfMonths={1}
-                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                          className="p-3"
-                        />
-                      </div>
+                  <div className="border border-border rounded-xl flex justify-center bg-background p-2">
+                    <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={handleDateSelect}
+                      numberOfMonths={1}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      className="p-3"
+                    />
+                  </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                            <Clock className="h-3 w-3" /> Pickup Time
-                          </Label>
-                          <select
-                            value={pickupTime}
-                            onChange={(e) => setPickupTime(e.target.value)}
-                            className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-                          >
-                            {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                            <Clock className="h-3 w-3" /> Return Time
-                          </Label>
-                          <select
-                            value={dropoffTime}
-                            onChange={(e) => setDropoffTime(e.target.value)}
-                            className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-                          >
-                            {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                        </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <Clock className="h-3 w-3" /> Heure de prise en charge
+                      </Label>
+                      <select
+                        value={pickupTime}
+                        onChange={(e) => setPickupTime(e.target.value)}
+                        className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                      >
+                        {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <Clock className="h-3 w-3" /> Heure de retour
+                      </Label>
+                      <select
+                        value={dropoffTime}
+                        onChange={(e) => setDropoffTime(e.target.value)}
+                        className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                      >
+                        {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ÉTAPE 1 : Coordonnées */}
+              {step === 1 && (
+                <div className="space-y-5">
+                  <div>
+                    <h2 className="text-xl font-bold">Vos coordonnées</h2>
+                    <p className="text-muted-foreground text-sm mt-1">L'hôte a besoin de vos informations de contact.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm"><User className="h-4 w-4 text-primary" /> Nom complet</Label>
+                      <Input placeholder="ex. Jean Dupont" value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-11" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm"><Phone className="h-4 w-4 text-primary" /> Téléphone</Label>
+                      <Input type="tel" placeholder="+33 6 12 34 56 78" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-11" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm"><Mail className="h-4 w-4 text-primary" /> Email</Label>
+                      <Input type="email" placeholder="vous@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm"><MessageSquare className="h-4 w-4 text-muted-foreground" /> Notes <span className="text-muted-foreground">(optionnel)</span></Label>
+                      <Textarea placeholder="Demandes spéciales pour l'hôte..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ÉTAPE 2 : Vérification et confirmation */}
+              {step === 2 && (
+                <div className="space-y-5">
+                  <div>
+                    <h2 className="text-xl font-bold">Vérifiez votre réservation</h2>
+                    <p className="text-muted-foreground text-sm mt-1">Assurez-vous que tout est correct avant de confirmer.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="rounded-xl border border-border p-4 space-y-3 bg-background">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Détails du trajet</h3>
+                      <div className="grid grid-cols-2 gap-y-2 text-sm">
+                        <span className="text-muted-foreground">Prise en charge</span>
+                        <span className="text-right font-medium">{dateRange?.from && format(dateRange.from, 'd MMM yyyy', { locale: fr })} · {pickupTime}</span>
+                        <span className="text-muted-foreground">Retour</span>
+                        <span className="text-right font-medium">{dateRange?.to && format(dateRange.to, 'd MMM yyyy', { locale: fr })} · {dropoffTime}</span>
+                        <span className="text-muted-foreground">Durée</span>
+                        <span className="text-right font-medium">{totalDays} jour{totalDays > 1 ? 's' : ''}</span>
                       </div>
                     </div>
-                  )}
 
-                  {/* STEP 1: Contact Details */}
-                  {step === 1 && (
-                    <div className="space-y-5">
-                      <div>
-                        <h2 className="text-xl font-bold">Your details</h2>
-                        <p className="text-muted-foreground text-sm mt-1">The host needs your contact information.</p>
+                    <div className="rounded-xl border border-border p-4 space-y-3 bg-background">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Contact</h3>
+                      <div className="grid grid-cols-2 gap-y-2 text-sm">
+                        <span className="text-muted-foreground">Nom</span>
+                        <span className="text-right font-medium">{fullName}</span>
+                        <span className="text-muted-foreground">Téléphone</span>
+                        <span className="text-right font-medium">{phone}</span>
+                        <span className="text-muted-foreground">Email</span>
+                        <span className="text-right font-medium truncate">{email}</span>
                       </div>
-
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-sm"><User className="h-4 w-4 text-primary" /> Full Name</Label>
-                          <Input placeholder="e.g. John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-11" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-sm"><Phone className="h-4 w-4 text-primary" /> Phone</Label>
-                          <Input type="tel" placeholder="+1 (555) 000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-11" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-sm"><Mail className="h-4 w-4 text-primary" /> Email</Label>
-                          <Input type="email" placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="flex items-center gap-2 text-sm"><MessageSquare className="h-4 w-4 text-muted-foreground" /> Notes <span className="text-muted-foreground">(optional)</span></Label>
-                          <Textarea placeholder="Any special requests for the host..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
-                        </div>
-                      </div>
+                      {notes && (
+                        <p className="text-sm text-muted-foreground border-t border-border pt-2 mt-2">{notes}</p>
+                      )}
                     </div>
-                  )}
 
-                  {/* STEP 2: Review & Confirm */}
-                  {step === 2 && (
-                    <div className="space-y-5">
-                      <div>
-                        <h2 className="text-xl font-bold">Review your booking</h2>
-                        <p className="text-muted-foreground text-sm mt-1">Make sure everything looks good before confirming.</p>
-                      </div>
-
-                      <div className="space-y-4">
-                        {/* Trip Summary */}
-                        <div className="rounded-xl border border-border p-4 space-y-3 bg-background">
-                          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Trip Details</h3>
-                          <div className="grid grid-cols-2 gap-y-2 text-sm">
-                            <span className="text-muted-foreground">Pickup</span>
-                            <span className="text-right font-medium">{dateRange?.from && format(dateRange.from, 'MMM d, yyyy')} · {pickupTime}</span>
-                            <span className="text-muted-foreground">Return</span>
-                            <span className="text-right font-medium">{dateRange?.to && format(dateRange.to, 'MMM d, yyyy')} · {dropoffTime}</span>
-                            <span className="text-muted-foreground">Duration</span>
-                            <span className="text-right font-medium">{totalDays} day{totalDays > 1 ? 's' : ''}</span>
-                          </div>
-                        </div>
-
-                        {/* Contact Summary */}
-                        <div className="rounded-xl border border-border p-4 space-y-3 bg-background">
-                          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Contact</h3>
-                          <div className="grid grid-cols-2 gap-y-2 text-sm">
-                            <span className="text-muted-foreground">Name</span>
-                            <span className="text-right font-medium">{fullName}</span>
-                            <span className="text-muted-foreground">Phone</span>
-                            <span className="text-right font-medium">{phone}</span>
-                            <span className="text-muted-foreground">Email</span>
-                            <span className="text-right font-medium truncate">{email}</span>
-                          </div>
-                          {notes && (
-                            <p className="text-sm text-muted-foreground border-t border-border pt-2 mt-2">{notes}</p>
-                          )}
-                        </div>
-
-                        {/* Terms */}
-                        <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-background">
-                          <Checkbox id="terms" checked={agreeTerms} onCheckedChange={(c) => setAgreeTerms(c === true)} className="mt-0.5" />
-                          <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-                            I agree to the <span className="text-foreground font-medium">rental terms and conditions</span>. My booking is subject to host approval and I won't be charged until confirmed.
-                          </label>
-                        </div>
-                      </div>
+                    <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-background">
+                      <Checkbox id="terms" checked={agreeTerms} onCheckedChange={(c) => setAgreeTerms(c === true)} className="mt-0.5" />
+                      <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+                        J'accepte les <span className="text-foreground font-medium">conditions générales de location</span>. Ma réservation est soumise à l'approbation de l'hôte et je ne serai pas facturé avant confirmation.
+                      </label>
                     </div>
-                  )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Navigation buttons */}
+            {/* Boutons de navigation */}
             <div className="flex items-center gap-3">
               {step > 0 && (
                 <Button variant="outline" size="lg" onClick={goBack} className="gap-2">
-                  <ChevronLeft className="h-4 w-4" /> Back
+                  <ChevronLeft className="h-4 w-4" /> Retour
                 </Button>
               )}
               <div className="flex-1" />
               {step === 0 && (
                 <Button size="lg" disabled={!canStep0} onClick={goNext} className="gap-2 min-w-[180px]">
-                  Continue <ChevronRight className="h-4 w-4" />
+                  Continuer <ChevronRight className="h-4 w-4" />
                 </Button>
               )}
               {step === 1 && (
                 <Button size="lg" disabled={!canStep1} onClick={goNext} className="gap-2 min-w-[180px]">
-                  Review Booking <ChevronRight className="h-4 w-4" />
+                  Vérifier la réservation <ChevronRight className="h-4 w-4" />
                 </Button>
               )}
               {step === 2 && (
@@ -381,19 +365,18 @@ const BookCar = () => {
                   className="gap-2 min-w-[200px]"
                 >
                   {submitting ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Traitement...</>
                   ) : (
-                    <><CheckCircle2 className="h-4 w-4" /> Confirm Booking</>
+                    <><CheckCircle2 className="h-4 w-4" /> Confirmer la réservation</>
                   )}
                 </Button>
               )}
             </div>
           </div>
 
-          {/* RIGHT: Booking summary sidebar */}
+          {/* DROITE : Résumé */}
           <div className="lg:col-span-2">
             <div className="sticky top-24 space-y-4">
-              {/* Car card */}
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 {car.images && car.images.length > 0 ? (
                   <img src={car.images[0]} alt={`${car.make} ${car.model}`} className="w-full h-48 object-cover" />
@@ -411,14 +394,13 @@ const BookCar = () => {
                     </div>
                   </div>
 
-                  {/* Host */}
                   {owner && (
                     <div className="flex items-center gap-3 pt-2 border-t border-border">
                       <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
                         {owner.full_name?.[0]?.toUpperCase() || '?'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{owner.full_name || 'Host'}</p>
+                        <p className="text-sm font-medium truncate">{owner.full_name || 'Hôte'}</p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {ownerRating !== null && (
                             <span className="flex items-center gap-0.5">
@@ -427,7 +409,7 @@ const BookCar = () => {
                           )}
                           {owner.kyc_status === 'verified' && (
                             <span className="flex items-center gap-0.5 text-primary">
-                              <Shield className="h-3 w-3" /> Verified
+                              <Shield className="h-3 w-3" /> Vérifié
                             </span>
                           )}
                         </div>
@@ -437,43 +419,41 @@ const BookCar = () => {
                 </div>
               </div>
 
-              {/* Price breakdown */}
               <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-                <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Price Breakdown</h3>
+                <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Détail du prix</h3>
                 {totalDays > 0 ? (
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">${car.daily_rate} × {totalDays} day{totalDays > 1 ? 's' : ''}</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span className="text-muted-foreground">{car.daily_rate} $ × {totalDays} jour{totalDays > 1 ? 's' : ''}</span>
+                      <span>{subtotal.toFixed(2)} $</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Service fee</span>
-                      <span>${platformFee.toFixed(2)}</span>
+                      <span className="text-muted-foreground">Frais de service</span>
+                      <span>{platformFee.toFixed(2)} $</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span className="text-primary">${totalPrice.toFixed(2)}</span>
+                      <span className="text-primary">{totalPrice.toFixed(2)} $</span>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-2xl font-bold text-primary">${car.daily_rate}</p>
-                    <p className="text-muted-foreground text-sm">/day</p>
-                    <p className="text-xs text-muted-foreground mt-2">Select dates to see total</p>
+                    <p className="text-2xl font-bold text-primary">{car.daily_rate} $</p>
+                    <p className="text-muted-foreground text-sm">/jour</p>
+                    <p className="text-xs text-muted-foreground mt-2">Sélectionnez des dates pour voir le total</p>
                   </div>
                 )}
               </div>
 
-              {/* Trust badges */}
               <div className="rounded-xl border border-border bg-card p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Shield className="h-4 w-4 text-primary" />
-                  <span>Free cancellation up to 24h before pickup</span>
+                  <span>Annulation gratuite jusqu'à 24h avant la prise en charge</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
-                  <span>No charge until host confirms</span>
+                  <span>Aucun frais tant que l'hôte n'a pas confirmé</span>
                 </div>
               </div>
             </div>

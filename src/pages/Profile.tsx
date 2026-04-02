@@ -30,21 +30,16 @@ const Profile = () => {
     setLoading(false);
 
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Success', description: 'Profile updated successfully!' });
-      window.location.reload(); // Refresh to update auth context
+      toast({ title: 'Succès', description: 'Profil mis à jour avec succès !' });
+      window.location.reload();
     }
   };
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   if (!user || !profile) {
@@ -52,7 +47,7 @@ const Profile = () => {
       <div className="min-h-screen">
         <Navbar />
         <div className="container py-16 text-center">
-          <p className="text-muted-foreground">Loading profile...</p>
+          <p className="text-muted-foreground">Chargement du profil...</p>
         </div>
       </div>
     );
@@ -62,19 +57,18 @@ const Profile = () => {
     <div className="min-h-screen">
       <Navbar />
       <div className="container py-8 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-8">My Profile</h1>
+        <h1 className="text-3xl font-bold mb-8">Mon profil</h1>
 
         <div className="grid gap-6 md:grid-cols-3">
-          {/* Profile Overview Card */}
           <Card className="md:col-span-1">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || 'User'} />
+                  <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || 'Utilisateur'} />
                   <AvatarFallback className="text-2xl">{getInitials(profile.full_name)}</AvatarFallback>
                 </Avatar>
               </div>
-              <CardTitle>{profile.full_name || 'No name set'}</CardTitle>
+              <CardTitle>{profile.full_name || 'Nom non défini'}</CardTitle>
               <CardDescription className="flex items-center justify-center gap-1 text-xs">
                 <Mail className="h-3 w-3" />
                 {user.email}
@@ -82,7 +76,7 @@ const Profile = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-2">Roles</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Rôles</p>
                 <div className="flex flex-wrap gap-2">
                   {roles.map((role) => (
                     <Badge key={role} variant="secondary" className="capitalize">
@@ -92,46 +86,45 @@ const Profile = () => {
                 </div>
               </div>
               <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-1">Account Status</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-1">Statut du compte</p>
                 <Badge variant="outline" className="capitalize">
                   {profile.kyc_status}
                 </Badge>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
-                Joined {new Date(profile.created_at).toLocaleDateString()}
+                Inscrit le {new Date(profile.created_at).toLocaleDateString('fr-FR')}
               </div>
             </CardContent>
           </Card>
 
-          {/* Edit Profile Card */}
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Edit Profile</CardTitle>
-              <CardDescription>Update your personal information</CardDescription>
+              <CardTitle>Modifier le profil</CardTitle>
+              <CardDescription>Mettez à jour vos informations personnelles</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName">Nom complet</Label>
                   <Input
                     id="fullName"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
+                    placeholder="Entrez votre nom complet"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="avatarUrl">Avatar URL</Label>
+                  <Label htmlFor="avatarUrl">URL de l'avatar</Label>
                   <Input
                     id="avatarUrl"
                     value={avatarUrl}
                     onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://example.com/avatar.jpg"
+                    placeholder="https://exemple.com/avatar.jpg"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Provide a URL to your profile picture
+                    Fournissez une URL vers votre photo de profil
                   </p>
                 </div>
 
@@ -139,38 +132,37 @@ const Profile = () => {
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" value={user.email || ''} disabled />
                   <p className="text-xs text-muted-foreground">
-                    Email cannot be changed directly
+                    L'email ne peut pas être modifié directement
                   </p>
                 </div>
 
                 <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? 'Updating...' : 'Update Profile'}
+                  {loading ? 'Mise à jour...' : 'Mettre à jour le profil'}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </div>
 
-        {/* Account Details */}
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>Your account details and statistics</CardDescription>
+            <CardTitle>Informations du compte</CardTitle>
+            <CardDescription>Détails et statistiques de votre compte</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50">
                 <User className="h-5 w-5 text-primary mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold">User ID</p>
+                  <p className="text-sm font-semibold">ID Utilisateur</p>
                   <p className="text-xs text-muted-foreground font-mono">{user.id}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50">
                 <Shield className="h-5 w-5 text-primary mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold">Authentication</p>
-                  <p className="text-xs text-muted-foreground">Email & Password</p>
+                  <p className="text-sm font-semibold">Authentification</p>
+                  <p className="text-xs text-muted-foreground">Email & Mot de passe</p>
                 </div>
               </div>
             </div>

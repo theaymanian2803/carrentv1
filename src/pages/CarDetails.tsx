@@ -29,7 +29,6 @@ const CarDetails = () => {
   const [ownerRating, setOwnerRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageIndex, setImageIndex] = useState(0);
-  
 
   useEffect(() => {
     const fetchCar = async () => {
@@ -43,14 +42,13 @@ const CarDetails = () => {
         .single();
 
       if (error || !carData) {
-        toast({ title: 'Car not found', variant: 'destructive' });
+        toast({ title: 'Voiture introuvable', variant: 'destructive' });
         navigate('/search');
         return;
       }
 
       setCar(carData);
 
-      // Fetch owner profile + average rating in parallel
       const [profileRes, ratingRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', carData.owner_id).single(),
         supabase.from('reviews').select('rating').eq('reviewee_id', carData.owner_id),
@@ -67,7 +65,6 @@ const CarDetails = () => {
 
     fetchCar();
   }, [id]);
-
 
   if (loading) {
     return (
@@ -100,12 +97,11 @@ const CarDetails = () => {
     <div className="min-h-screen">
       <Navbar />
       <div className="container py-8 max-w-5xl">
-        {/* Back button */}
         <Button variant="ghost" size="sm" className="mb-4 gap-2" onClick={() => navigate('/search')}>
-          <ChevronLeft className="h-4 w-4" /> Back to search
+          <ChevronLeft className="h-4 w-4" /> Retour à la recherche
         </Button>
 
-        {/* Image Carousel */}
+        {/* Carrousel d'images */}
         <div className="relative rounded-xl overflow-hidden bg-muted mb-6 aspect-[16/9] max-h-[450px]">
           {car.images && car.images.length > 0 ? (
             <>
@@ -128,7 +124,6 @@ const CarDetails = () => {
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
-                  {/* Dots */}
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                     {car.images.map((_, i) => (
                       <button
@@ -152,7 +147,6 @@ const CarDetails = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Left: Details */}
           <div className="md:col-span-2 space-y-6">
             <div>
               <div className="flex items-start justify-between gap-4">
@@ -168,26 +162,24 @@ const CarDetails = () => {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-3xl font-bold text-primary">${car.daily_rate}</span>
-                  <span className="text-muted-foreground">/day</span>
+                  <span className="text-3xl font-bold text-primary">{car.daily_rate} $</span>
+                  <span className="text-muted-foreground">/jour</span>
                 </div>
               </div>
             </div>
 
             <Separator />
 
-            {/* Description */}
             {car.description && (
               <div>
-                <h2 className="font-semibold text-lg mb-2">About this car</h2>
+                <h2 className="font-semibold text-lg mb-2">À propos de cette voiture</h2>
                 <p className="text-muted-foreground leading-relaxed">{car.description}</p>
               </div>
             )}
 
-            {/* Features */}
             {features.length > 0 && (
               <div>
-                <h2 className="font-semibold text-lg mb-3">Features</h2>
+                <h2 className="font-semibold text-lg mb-3">Équipements</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {features.map((f) => (
                     <div key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -200,15 +192,14 @@ const CarDetails = () => {
 
             <Separator />
 
-            {/* Host profile */}
             <div>
-              <h2 className="font-semibold text-lg mb-3">Your Host</h2>
+              <h2 className="font-semibold text-lg mb-3">Votre hôte</h2>
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
                   {owner?.full_name?.[0]?.toUpperCase() || '?'}
                 </div>
                 <div>
-                  <p className="font-medium">{owner?.full_name || 'Host'}</p>
+                  <p className="font-medium">{owner?.full_name || 'Hôte'}</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     {ownerRating !== null ? (
                       <span className="flex items-center gap-1">
@@ -216,11 +207,11 @@ const CarDetails = () => {
                         {ownerRating}
                       </span>
                     ) : (
-                      <span>New host</span>
+                      <span>Nouvel hôte</span>
                     )}
                     {owner?.kyc_status === 'verified' && (
                       <Badge variant="outline" className="text-xs gap-1">
-                        <Shield className="h-3 w-3" /> Verified
+                        <Shield className="h-3 w-3" /> Vérifié
                       </Badge>
                     )}
                   </div>
@@ -229,16 +220,15 @@ const CarDetails = () => {
             </div>
           </div>
 
-          {/* Right: Booking card */}
           <div>
             <Card className="sticky top-24">
               <CardHeader>
-                <CardTitle className="text-lg">Book this car</CardTitle>
+                <CardTitle className="text-lg">Réserver cette voiture</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center py-4">
-                  <div className="text-3xl font-bold text-primary">${car.daily_rate}</div>
-                  <div className="text-muted-foreground">/day</div>
+                  <div className="text-3xl font-bold text-primary">{car.daily_rate} $</div>
+                  <div className="text-muted-foreground">/jour</div>
                 </div>
 
                 <Button
@@ -252,18 +242,17 @@ const CarDetails = () => {
                     }
                   }}
                 >
-                  {!user ? 'Sign in to book' : 'Request to Book'}
+                  {!user ? 'Connectez-vous pour réserver' : 'Demander à réserver'}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  You won't be charged until the host approves.
+                  Vous ne serez pas facturé tant que l'hôte n'aura pas approuvé.
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-
     </div>
   );
 };
