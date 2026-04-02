@@ -28,6 +28,9 @@ type BookingStatus = Database['public']['Enums']['booking_status'];
 interface BookingWithDetails extends BookingRow {
   car?: { make: string; model: string; year: number; images: string[] } | null;
   renter?: { full_name: string | null; avatar_url: string | null } | null;
+  renter_phone?: string;
+  renter_email?: string;
+  renter_notes?: string;
 }
 
 const STATUS_OPTIONS: BookingStatus[] = ['pending', 'approved', 'active', 'completed', 'cancelled', 'disputed'];

@@ -139,7 +139,10 @@ const BookCar = () => {
       platform_fee: platformFee,
       owner_payout: ownerPayout,
       total_price: totalPrice,
-    });
+      renter_phone: phone,
+      renter_email: email,
+      renter_notes: notes,
+    } as any);
 
     if (error) {
       toast({ title: 'Booking failed', description: error.message, variant: 'destructive' });
