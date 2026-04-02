@@ -22,7 +22,10 @@ export type Database = {
           id: string
           owner_payout: number
           platform_fee: number
+          renter_email: string | null
           renter_id: string
+          renter_notes: string | null
+          renter_phone: string | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
           total_days: number
@@ -36,7 +39,10 @@ export type Database = {
           id?: string
           owner_payout?: number
           platform_fee?: number
+          renter_email?: string | null
           renter_id: string
+          renter_notes?: string | null
+          renter_phone?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_days: number
@@ -50,7 +56,10 @@ export type Database = {
           id?: string
           owner_payout?: number
           platform_fee?: number
+          renter_email?: string | null
           renter_id?: string
+          renter_notes?: string | null
+          renter_phone?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_days?: number

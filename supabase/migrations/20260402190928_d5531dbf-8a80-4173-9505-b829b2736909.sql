@@ -1,0 +1,1 @@
+ALTER TABLE public.bookings ADD COLUMN renter_phone text DEFAULT '', ADD COLUMN renter_email text DEFAULT '', ADD COLUMN renter_notes text DEFAULT '';
