@@ -1,131 +1,290 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Car, Shield, Star, Zap, MapPin, Clock, CreditCard, ChevronRight, Play } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, MapPin, Car as CarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
-import heroImg from '@/assets/hero-night.jpg';
-import catSuv from '@/assets/cat-suv.png';
-import catSedan from '@/assets/cat-sedan.png';
-import catLuxury from '@/assets/cat-luxury.png';
-import catElectric from '@/assets/cat-electric.png';
-import { useLandingSections, type LandingSection } from '@/hooks/useLandingSections';
-import { Skeleton } from '@/components/ui/skeleton';
+import type { Tables } from '@/integrations/supabase/types';
 
-const fadeUp = { hidden: { opacity: 0, y: 40 }, visible: (i: number = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.7, ease: [0.25, 0.1, 0, 1] as const } }) };
-const stagger = { visible: { transition: { staggerChildren: 0.1 } } };
-const ICON_MAP: Record<string, any> = { Shield, Star, Zap, MapPin, Clock, CreditCard, Car };
-const CAT_IMG_MAP: Record<string, string> = { SUV: catSuv, Sedan: catSedan, Luxury: catLuxury, Electric: catElectric };
+type CarRow = Tables<'cars'>;
 
-function HeroSection({ content }: { content: Record<string, any> }) {
-  const stats = (content.stats ?? []) as { value: string; label: string }[];
-  const bgImage = content.image_url || heroImg;
+const CATEGORIES = [
+  { key: 'SUV', label: 'SUV', tag: 'Tout-terrain' },
+  { key: 'Sedan', label: 'Berline', tag: 'Confort' },
+  { key: 'Luxury', label: 'Luxe', tag: 'Prestige' },
+  { key: 'Electric', label: 'Électrique', tag: 'Innovation' },
+];
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i: number = 0) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.06, duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
+  }),
+};
+
+/* ─────────── HERO ─────────── */
+function Hero({ featured }: { featured: CarRow | null }) {
   return (
-    <section className="relative h-[100vh] min-h-[600px] flex items-end overflow-hidden">
-      <img src={bgImage} alt="Arrière-plan" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
-      <div className="container relative z-10 pb-20 lg:pb-28">
-        <motion.div className="max-w-3xl" initial="hidden" animate="visible" variants={stagger}>
-          <motion.div variants={fadeUp} custom={0} className="flex items-center gap-3 mb-6"><span className="h-px w-12 bg-primary" /><span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">{content.subtitle}</span></motion.div>
-          <motion.h1 variants={fadeUp} custom={1} className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tight leading-[0.95]">{content.heading_line1}<br /><span className="text-primary">{content.heading_highlight}</span> {content.heading_line2}</motion.h1>
-          <motion.p variants={fadeUp} custom={2} className="mt-6 text-lg lg:text-xl text-muted-foreground max-w-lg leading-relaxed">{content.description}</motion.p>
-          <motion.div variants={fadeUp} custom={3} className="mt-10 flex flex-wrap items-center gap-4">
-            <Link to="/search"><Button size="lg" className="h-14 px-10 text-base rounded-full gap-2 shadow-lg shadow-primary/20">{content.cta_primary} <ArrowRight className="h-5 w-5" /></Button></Link>
-            <Link to="/auth"><Button variant="ghost" size="lg" className="h-14 px-8 text-base rounded-full gap-2 text-foreground hover:text-primary"><Play className="h-4 w-4 fill-current" /> {content.cta_secondary}</Button></Link>
-          </motion.div>
-          <motion.div variants={fadeUp} custom={4} className="mt-14 flex flex-wrap gap-8 lg:gap-14">
-            {stats.map((s) => (<div key={s.label}><div className="text-2xl lg:text-3xl font-bold">{s.value}</div><div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{s.label}</div></div>))}
-          </motion.div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function CategoriesSection({ content }: { content: Record<string, any> }) {
-  const items = (content.items ?? []) as { name: string; count: string; tag: string }[];
-  return (
-    <section className="py-24 lg:py-32">
-      <div className="container">
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={stagger}>
-          <motion.div variants={fadeUp} className="flex items-end justify-between mb-12">
-            <div><span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">{content.subtitle}</span><h2 className="text-3xl lg:text-5xl font-bold mt-2">{content.heading}</h2></div>
-            <Link to="/search" className="hidden sm:flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">Voir tout <ChevronRight className="h-4 w-4" /></Link>
-          </motion.div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {items.map((cat, i) => (
-              <motion.div key={cat.name} variants={fadeUp} custom={i}><Link to={`/search?category=${cat.name}`} className="group block"><div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-card border border-border/50 hover:border-primary/40 transition-all duration-500"><div className="absolute inset-0 flex items-center justify-center p-6"><img src={CAT_IMG_MAP[cat.name] ?? catSuv} alt={cat.name} className="w-full h-auto object-contain group-hover:scale-110 transition-transform duration-700 ease-out" loading="lazy" /></div><div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-card via-card/80 to-transparent" /><div className="absolute bottom-0 inset-x-0 p-5"><span className="text-[10px] font-bold uppercase tracking-widest text-primary">{cat.tag}</span><div className="flex items-end justify-between mt-1"><h3 className="text-xl font-bold">{cat.name}</h3><span className="text-sm text-muted-foreground">{cat.count}</span></div></div></div></Link></motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function StepsSection({ content }: { content: Record<string, any> }) {
-  const items = (content.items ?? []) as { num: string; title: string; desc: string; icon: string }[];
-  return (
-    <section className="py-24 lg:py-32 border-t border-border/40"><div className="container"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={stagger}><motion.div variants={fadeUp} className="max-w-md mb-16"><span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">{content.subtitle}</span><h2 className="text-3xl lg:text-5xl font-bold mt-2 whitespace-pre-line">{content.heading}</h2></motion.div><div className="grid md:grid-cols-3 gap-px bg-border/40 rounded-2xl overflow-hidden">{items.map((step, i) => { const Icon = ICON_MAP[step.icon] ?? MapPin; return (<motion.div key={step.num} variants={fadeUp} custom={i} className="bg-card p-8 lg:p-10 group hover:bg-muted/50 transition-colors duration-300"><div className="flex items-center gap-4 mb-6"><span className="text-5xl font-bold text-primary/20 group-hover:text-primary/40 transition-colors">{step.num}</span><div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center"><Icon className="h-5 w-5 text-primary" /></div></div><h3 className="text-xl font-bold mb-2">{step.title}</h3><p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p></motion.div>); })}</div></motion.div></div></section>
-  );
-}
-
-function FeaturesSection({ content }: { content: Record<string, any> }) {
-  const items = (content.items ?? []) as { icon: string; title: string; desc: string }[];
-  return (
-    <section className="py-24 lg:py-32 border-t border-border/40"><div className="container"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={stagger}><motion.div variants={fadeUp} className="text-center max-w-lg mx-auto mb-16"><span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">{content.subtitle}</span><h2 className="text-3xl lg:text-5xl font-bold mt-2">{content.heading}</h2><p className="text-muted-foreground mt-4">{content.description}</p></motion.div><div className="grid sm:grid-cols-2 gap-4 lg:gap-6">{items.map((f, i) => { const Icon = ICON_MAP[f.icon] ?? Shield; return (<motion.div key={f.title} variants={fadeUp} custom={i} className="group relative rounded-2xl border border-border/50 bg-card p-8 lg:p-10 hover:border-primary/30 transition-all duration-300 overflow-hidden"><div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/5 opacity-0 group-hover:opacity-100 blur-3xl transition-opacity duration-500" /><div className="relative z-10"><div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/15 transition-colors"><Icon className="h-6 w-6 text-primary" /></div><h3 className="text-lg font-bold mb-2">{f.title}</h3><p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p></div></motion.div>); })}</div></motion.div></div></section>
-  );
-}
-
-function TestimonialsSection({ content }: { content: Record<string, any> }) {
-  const items = (content.items ?? []) as { name: string; role: string; quote: string }[];
-  return (
-    <section className="py-24 lg:py-32 border-t border-border/40"><div className="container"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={stagger}><motion.div variants={fadeUp} className="mb-14"><span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">{content.subtitle}</span><h2 className="text-3xl lg:text-5xl font-bold mt-2">{content.heading}</h2></motion.div><div className="grid md:grid-cols-3 gap-6">{items.map((t, i) => (<motion.div key={t.name} variants={fadeUp} custom={i} className="rounded-2xl border border-border/50 bg-card p-8 flex flex-col justify-between"><div><div className="flex gap-1 mb-5">{[1,2,3,4,5].map((s) => <Star key={s} className="h-4 w-4 fill-primary text-primary" />)}</div><p className="text-foreground/80 leading-relaxed text-[15px]">"{t.quote}"</p></div><div className="mt-8 flex items-center gap-3 pt-6 border-t border-border/40"><div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">{t.name[0]}</div><div><div className="font-semibold text-sm">{t.name}</div><div className="text-xs text-muted-foreground">{t.role}</div></div></div></motion.div>))}</div></motion.div></div></section>
-  );
-}
-
-function OwnerCtaSection({ content }: { content: Record<string, any> }) {
-  const bullets = (content.bullets ?? []) as string[];
-  return (
-    <section className="relative py-24 lg:py-32 border-t border-border/40 overflow-hidden"><div className="container relative z-10"><motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="relative rounded-3xl overflow-hidden min-h-[500px]">{content.image_url && (<><img src={content.image_url} alt="Bannière" className="absolute inset-0 w-full h-full object-cover" loading="lazy" /><div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/40" /></>)}{!content.image_url && (<div className="absolute inset-0 bg-card border border-border/50" />)}<div className="relative z-10 grid lg:grid-cols-2 min-h-[500px]"><div className="p-10 lg:p-16 flex flex-col justify-center"><span className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">{content.subtitle}</span><h2 className="text-3xl lg:text-4xl font-bold mt-3 leading-tight">{content.heading} <span className="text-primary">{content.highlight}</span></h2><p className="text-muted-foreground mt-4 leading-relaxed">{content.description}</p><ul className="mt-8 space-y-3">{bullets.map((item) => (<li key={item} className="flex items-center gap-3 text-sm text-foreground/80"><span className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />{item}</li>))}</ul><div className="mt-10"><Link to="/auth"><Button size="lg" className="h-14 px-10 text-base rounded-full gap-2 shadow-lg shadow-primary/20">{content.cta} <ArrowRight className="h-5 w-5" /></Button></Link></div></div>{!content.image_url && (<div className="relative min-h-[300px] lg:min-h-0 bg-muted/30 flex items-center justify-center overflow-hidden"><div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" /><div className="relative text-center p-10"><div className="text-7xl lg:text-8xl font-bold text-primary/15">$$$</div><div className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-xl shadow-primary/30">Jusqu'à {content.highlight}</div></div></div>)}</div></motion.div></div></section>
-  );
-}
-
-function FinalCtaSection({ content }: { content: Record<string, any> }) {
-  return (
-    <section className="relative py-32 lg:py-44 border-t border-border/40 overflow-hidden">{content.image_url ? (<><img src={content.image_url} alt="CTA" className="absolute inset-0 w-full h-full object-cover" loading="lazy" /><div className="absolute inset-0 bg-background/80 backdrop-blur-sm" /></>) : (<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,hsl(var(--primary)/0.06),transparent_60%)]" />)}<motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="container relative z-10 text-center"><h2 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight">{content.heading_before} <span className="text-primary">{content.heading_highlight}</span>{content.heading_after}</h2><p className="text-muted-foreground mt-6 text-lg max-w-md mx-auto">{content.description}</p><div className="mt-12 flex flex-wrap justify-center gap-4"><Link to="/search"><Button size="lg" className="h-14 px-12 text-base rounded-full gap-2 shadow-lg shadow-primary/20">{content.cta_primary} <ArrowRight className="h-5 w-5" /></Button></Link><Link to="/auth"><Button variant="outline" size="lg" className="h-14 px-10 text-base rounded-full border-border">{content.cta_secondary}</Button></Link></div></motion.div></section>
-  );
-}
-
-function FooterSection({ content }: { content: Record<string, any> }) {
-  const columns = (content.columns ?? []) as { title: string; links: { label: string; href: string }[] }[];
-  return (
-    <footer className="border-t border-border/40">
-      <div className="container py-14">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
-          <div>
-            <Link to="/" className="flex items-center gap-2 font-bold text-xl mb-4">
-              <Car className="h-5 w-5 text-primary" /> DriveShare
+    <section className="border-b border-border/70">
+      <div className="container grid lg:grid-cols-12 gap-12 lg:gap-16 pt-16 lg:pt-24 pb-20 lg:pb-28 items-end">
+        <motion.div
+          className="lg:col-span-6 space-y-8"
+          initial="hidden" animate="visible" variants={fadeUp}
+        >
+          <span className="eyebrow">Location entre particuliers</span>
+          <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
+            L'automobile,<br />
+            <span className="italic font-light text-muted-foreground">à votre porte.</span>
+          </h1>
+          <p className="text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
+            Une sélection de véhicules confiés par leurs propriétaires. Réservation directe, tarifs
+            transparents, couverture incluse.
+          </p>
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <Link to="/search">
+              <Button className="h-12 px-8 rounded-none text-[11px] uppercase tracking-[0.22em] gap-3">
+                Explorer la flotte <ArrowRight className="h-4 w-4" />
+              </Button>
             </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed">{content.tagline}</p>
+            <Link to="/auth" className="text-[11px] uppercase tracking-[0.22em] font-semibold border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors">
+              Devenir hôte
+            </Link>
           </div>
-          {columns.map((col) => (
-            <div key={col.title}>
-              <h4 className="font-semibold text-sm mb-4">{col.title}</h4>
-              <ul className="space-y-2.5 text-sm text-muted-foreground">
-                {col.links.map((link) => (
-                  <li key={link.label}><Link to={link.href} className="hover:text-primary transition-colors">{link.label}</Link></li>
-                ))}
-              </ul>
+          <dl className="grid grid-cols-3 gap-8 pt-10 border-t border-border/70 max-w-md">
+            {[
+              { v: '2 500+', l: 'Voitures' },
+              { v: '10K+', l: 'Conducteurs' },
+              { v: '4.9', l: 'Note moyenne' },
+            ].map((s) => (
+              <div key={s.l}>
+                <dt className="font-heading text-2xl font-medium">{s.v}</dt>
+                <dd className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">{s.l}</dd>
+              </div>
+            ))}
+          </dl>
+        </motion.div>
+
+        <motion.div
+          className="lg:col-span-6"
+          initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {featured?.images?.[0] ? (
+            <Link to={`/cars/${featured.id}`} className="group block">
+              <div className="aspect-[5/6] lg:aspect-[4/5] bg-muted overflow-hidden">
+                <img
+                  src={featured.images[0]}
+                  alt={`${featured.make} ${featured.model}`}
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-[1200ms] ease-out"
+                />
+              </div>
+              <div className="flex items-end justify-between mt-5 pb-2">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">À la une</p>
+                  <h3 className="font-heading text-xl mt-1">{featured.make} {featured.model}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> {featured.address}
+                  </p>
+                </div>
+                <p className="font-heading text-2xl">
+                  {featured.daily_rate}$
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-body ml-1">/jour</span>
+                </p>
+              </div>
+            </Link>
+          ) : (
+            <div className="aspect-[4/5] bg-muted flex items-center justify-center">
+              <CarIcon className="h-16 w-16 text-muted-foreground/30" />
             </div>
+          )}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────── CATEGORIES ─────────── */
+function Categories() {
+  return (
+    <section className="border-b border-border/70 py-20 lg:py-28">
+      <div className="container">
+        <div className="flex items-end justify-between mb-14 flex-wrap gap-6">
+          <div>
+            <span className="eyebrow">Catégories</span>
+            <h2 className="font-heading text-3xl md:text-4xl mt-4">Chaque trajet, sa voiture.</h2>
+          </div>
+          <Link to="/search" className="text-[11px] uppercase tracking-[0.22em] font-semibold border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors">
+            Voir la collection
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 border-t border-border/70">
+          {CATEGORIES.map((cat) => (
+            <Link
+              key={cat.key}
+              to={`/search?category=${cat.key}`}
+              className="group border-b lg:border-b-0 lg:border-r last:border-r-0 border-border/70 py-10 lg:py-14 px-4 lg:px-8 hover:bg-muted/40 transition-colors relative"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground mb-3">{cat.tag}</p>
+                  <h3 className="font-heading text-3xl lg:text-4xl">{cat.label}</h3>
+                </div>
+                <ArrowUpRight className="h-5 w-5 text-muted-foreground group-hover:text-accent group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div className="mt-10 h-px w-8 bg-accent group-hover:w-16 transition-all duration-500" />
+            </Link>
           ))}
         </div>
-        <div className="border-t border-border/40 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">© 2026 DriveShare. Tous droits réservés.</p>
-          <div className="flex gap-6 text-sm text-muted-foreground">
-            <span className="hover:text-foreground cursor-pointer transition-colors">Confidentialité</span>
-            <span className="hover:text-foreground cursor-pointer transition-colors">Conditions</span>
-            <span className="hover:text-foreground cursor-pointer transition-colors">Support</span>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────── FEATURED CARS ─────────── */
+function FeaturedCars({ cars }: { cars: CarRow[] }) {
+  return (
+    <section className="border-b border-border/70 py-20 lg:py-28">
+      <div className="container">
+        <div className="flex items-end justify-between mb-14 flex-wrap gap-6">
+          <div>
+            <span className="eyebrow">Disponibles</span>
+            <h2 className="font-heading text-3xl md:text-4xl mt-4">Sélection du moment.</h2>
+          </div>
+          <Link to="/search" className="text-[11px] uppercase tracking-[0.22em] font-semibold border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors">
+            Tout parcourir
+          </Link>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-14">
+          {cars.map((car, i) => (
+            <motion.div
+              key={car.id}
+              initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }}
+              custom={i} variants={fadeUp}
+            >
+              <Link to={`/cars/${car.id}`} className="group block">
+                <div className="aspect-[4/3] bg-muted overflow-hidden">
+                  {car.images?.[0] ? (
+                    <img
+                      src={car.images[0]}
+                      alt={`${car.make} ${car.model}`}
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-[1200ms] ease-out"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <CarIcon className="h-10 w-10 text-muted-foreground/30" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-start justify-between mt-5 pb-4 border-b border-border/70">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">{car.make}</p>
+                    <h3 className="font-heading text-lg mt-1 group-hover:text-accent transition-colors">
+                      {car.model}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> {car.address}
+                    </p>
+                  </div>
+                  <p className="font-heading text-lg text-right">
+                    {car.daily_rate}$
+                    <span className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-body mt-0.5">
+                      / jour
+                    </span>
+                  </p>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────── HOST CTA ─────────── */
+function HostCta() {
+  return (
+    <section className="border-b border-border/70 bg-foreground text-background">
+      <div className="container grid lg:grid-cols-12 gap-12 py-24 lg:py-32 items-center">
+        <div className="lg:col-span-7 space-y-8">
+          <span className="inline-flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-accent">
+            <span className="inline-block h-px w-8 bg-accent" /> Hôtes
+          </span>
+          <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl leading-[1.02] tracking-tight">
+            Votre voiture,<br />
+            <span className="italic font-light text-background/60">une seconde vie.</span>
+          </h2>
+          <p className="text-background/70 max-w-md text-base leading-relaxed">
+            Rejoignez la communauté des hôtes DriveShare et rentabilisez votre véhicule
+            jusqu'à 1 200 $/mois. Couverture complète, calendrier flexible.
+          </p>
+          <Link to="/auth">
+            <Button
+              variant="outline"
+              className="h-12 px-8 rounded-none bg-transparent border-background text-background hover:bg-accent hover:text-foreground hover:border-accent text-[11px] uppercase tracking-[0.22em] gap-3"
+            >
+              Lister mon véhicule <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+        <dl className="lg:col-span-5 grid grid-cols-2 gap-y-10 gap-x-8">
+          {[
+            { v: '1 200$', l: 'Revenu mensuel moyen' },
+            { v: '0%', l: 'Frais de plateforme' },
+            { v: '24/7', l: 'Support dédié' },
+            { v: '100%', l: 'Assurance incluse' },
+          ].map((s) => (
+            <div key={s.l} className="border-t border-background/20 pt-4">
+              <dt className="font-heading text-3xl text-accent">{s.v}</dt>
+              <dd className="text-[10px] uppercase tracking-[0.22em] text-background/60 mt-2">{s.l}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────── FOOTER ─────────── */
+function Footer() {
+  return (
+    <footer>
+      <div className="container py-20 grid grid-cols-2 md:grid-cols-5 gap-12">
+        <div className="col-span-2 space-y-6">
+          <Link to="/" className="font-heading text-xl font-semibold uppercase tracking-tight">
+            Drive<span className="text-accent">Share</span>
+          </Link>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+            La marketplace entre particuliers pour une location automobile simple, sûre et
+            transparente.
+          </p>
+        </div>
+        {[
+          { t: 'Explorer', l: [['Rechercher', '/search'], ['SUV', '/search?category=SUV'], ['Luxe', '/search?category=Luxury'], ['Électrique', '/search?category=Electric']] },
+          { t: 'Communauté', l: [['Devenir hôte', '/auth'], ['Aide', '#'], ['Sécurité', '#']] },
+          { t: 'Société', l: [['À propos', '#'], ['Contact', '#'], ['Presse', '#']] },
+        ].map((col) => (
+          <div key={col.t} className="space-y-4">
+            <h4 className="text-[10px] uppercase tracking-[0.24em] font-semibold">{col.t}</h4>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              {col.l.map(([label, href]) => (
+                <li key={label}>
+                  <Link to={href} className="hover:text-foreground transition-colors">{label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-border/70">
+        <div className="container flex flex-col md:flex-row justify-between items-center gap-4 py-6 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <p>© 2026 DriveShare. Tous droits réservés.</p>
+          <div className="flex gap-8">
+            <span className="hover:text-foreground cursor-pointer">Confidentialité</span>
+            <span className="hover:text-foreground cursor-pointer">Conditions</span>
+            <span className="hover:text-foreground cursor-pointer">Cookies</span>
           </div>
         </div>
       </div>
@@ -133,27 +292,30 @@ function FooterSection({ content }: { content: Record<string, any> }) {
   );
 }
 
-const SECTION_RENDERERS: Record<string, React.FC<{ content: Record<string, any> }>> = {
-  hero: HeroSection, categories: CategoriesSection, steps: StepsSection, features: FeaturesSection,
-  testimonials: TestimonialsSection, owner_cta: OwnerCtaSection, final_cta: FinalCtaSection, footer: FooterSection,
-};
-
+/* ─────────── PAGE ─────────── */
 const Index = () => {
-  const { data: sections, isLoading } = useLandingSections();
-  const visibleSections = (sections ?? []).filter((s) => s.is_visible).sort((a, b) => a.sort_order - b.sort_order);
+  const [cars, setCars] = useState<CarRow[]>([]);
+
+  useEffect(() => {
+    supabase.from('cars')
+      .select('*')
+      .eq('status', 'live')
+      .eq('is_active', true)
+      .order('daily_rate', { ascending: false })
+      .limit(7)
+      .then(({ data }) => setCars(data || []));
+  }, []);
+
+  const [featured, ...rest] = cars;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      {isLoading ? (
-        <div className="container py-32 space-y-8"><Skeleton className="h-[60vh] rounded-xl" /><Skeleton className="h-64 rounded-xl" /><Skeleton className="h-64 rounded-xl" /></div>
-      ) : (
-        visibleSections.map((section) => {
-          const Renderer = SECTION_RENDERERS[section.section_type];
-          if (!Renderer) return null;
-          return <Renderer key={section.id} content={section.content as Record<string, any>} />;
-        })
-      )}
+      <Hero featured={featured || null} />
+      <Categories />
+      {rest.length > 0 && <FeaturedCars cars={rest.slice(0, 6)} />}
+      <HostCta />
+      <Footer />
     </div>
   );
 };
