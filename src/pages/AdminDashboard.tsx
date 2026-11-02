@@ -11,6 +11,7 @@ import UserManagement from '@/components/admin/UserManagement';
 import ActivityAnalytics from '@/components/admin/ActivityAnalytics';
 import { useAdminStats } from '@/hooks/queries/useAdmin';
 import BookingManagement from '@/components/admin/BookingManagement';
+import OnboardingChecklist from '@/components/admin/OnboardingChecklist';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -31,6 +32,8 @@ const AdminDashboard = () => {
             <LayoutDashboard className="h-4 w-4" /> Éditeur de page
           </Button>
         </div>
+
+        <OnboardingChecklist />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {metrics.map((m) => (

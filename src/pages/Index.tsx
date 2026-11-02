@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useCars } from '@/hooks/queries/useCars';
 import { usePublicLandingSections } from '@/hooks/useLandingSections';
 import { isCarRow, carRowFilters, carRowSubtitle } from '@/lib/carRows';
+import { heroContent, isHero, type HeroContent } from '@/lib/hero';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowUpRight, MapPin, Car as CarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -24,7 +25,8 @@ const fadeUp = {
 };
 
 /* ─────────── HERO ─────────── */
-function Hero({ featured }: { featured: CarRow | null }) {
+function Hero({ featured, content }: { featured: CarRow | null; content: HeroContent }) {
+  const imageUrl = content.image_url || featured?.images?.[0] || '';
   return (
     <section className="border-b border-border/70">
       <div className="container grid lg:grid-cols-12 gap-12 lg:gap-16 pt-16 lg:pt-24 pb-20 lg:pb-28 items-center">
@@ -32,23 +34,23 @@ function Hero({ featured }: { featured: CarRow | null }) {
           className="lg:col-span-6 space-y-8"
           initial="hidden" animate="visible" variants={fadeUp}
         >
-          <span className="eyebrow">Location entre particuliers</span>
+          <span className="eyebrow">{content.eyebrow}</span>
           <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-            L'automobile,<br />
-            <span className="italic font-light text-muted-foreground">à votre porte.</span>
+            {content.heading_line1}<br />
+            <span className="italic font-light text-muted-foreground">{content.heading_highlight}</span>
+            {content.heading_line2 && <><br />{content.heading_line2}</>}
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
-            Une sélection de véhicules confiés par leurs propriétaires. Réservation directe, tarifs
-            transparents, couverture incluse.
+            {content.description}
           </p>
           <div className="flex flex-wrap items-center gap-4 pt-2">
-            <Link to="/search">
+            <Link to={content.cta_primary_link}>
               <Button className="h-12 px-8 rounded-none text-[11px] uppercase tracking-[0.22em] gap-3">
-                Explorer la flotte <ArrowRight className="h-4 w-4" />
+                {content.cta_primary} <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/auth" className="text-[11px] uppercase tracking-[0.22em] font-semibold border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors">
-              Devenir hôte
+            <Link to={content.cta_secondary_link} className="text-[11px] uppercase tracking-[0.22em] font-semibold border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors">
+              {content.cta_secondary}
             </Link>
           </div>
           <dl className="grid grid-cols-3 gap-8 pt-10 border-t border-border/70 max-w-md">
@@ -70,27 +72,33 @@ function Hero({ featured }: { featured: CarRow | null }) {
           initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         >
-          {featured?.images?.[0] ? (
-            <Link to={`/cars/${featured.id}`} className="group block">
+          {imageUrl ? (
+            <Link to={featured ? `/cars/${featured.id}` : content.cta_primary_link} className="group block">
               <div className="aspect-[5/6] lg:aspect-[4/5] bg-muted overflow-hidden">
                 <img
-                  src={featured.images[0]}
-                  alt={`${featured.make} ${featured.model}`}
+                  src={imageUrl}
+                  alt={featured ? `${featured.make} ${featured.model}` : content.heading_highlight}
                   className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-[1200ms] ease-out"
                 />
               </div>
               <div className="flex items-end justify-between mt-5 pb-2">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">À la une</p>
-                  <h3 className="font-heading text-xl mt-1">{featured.make} {featured.model}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                    <MapPin className="h-3 w-3" /> {featured.address}
-                  </p>
+                  <h3 className="font-heading text-xl mt-1">
+                    {featured ? `${featured.make} ${featured.model}` : content.heading_highlight}
+                  </h3>
+                  {featured && (
+                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> {featured.address}
+                    </p>
+                  )}
                 </div>
-                <p className="font-heading text-2xl">
-                  {featured.daily_rate}$
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-body ml-1">/jour</span>
-                </p>
+                {featured && (
+                  <p className="font-heading text-2xl">
+                    {featured.daily_rate}$
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-body ml-1">/jour</span>
+                  </p>
+                )}
               </div>
             </Link>
           ) : (
@@ -215,6 +223,38 @@ function DynamicCarRow({ section }: { section: LandingSection }) {
   );
 }
 
+/* ─────────── BANNER ─────────── */
+function BannerSection({ section }: { section: LandingSection }) {
+  const content = section.content as Record<string, string | undefined>;
+  const heading = content.heading || section.title;
+
+  return (
+    <section className="border-b border-border/70 py-20 lg:py-28">
+      <div className="container grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
+        {content.image_url && (
+          <div className="aspect-[4/3] overflow-hidden bg-muted">
+            <img src={content.image_url} alt={heading} className="w-full h-full object-cover" />
+          </div>
+        )}
+        <div className={content.image_url ? '' : 'md:col-span-2 max-w-2xl'}>
+          {content.subtitle && <span className="eyebrow">{content.subtitle}</span>}
+          <h2 className="font-heading text-3xl md:text-4xl mt-4">{heading}</h2>
+          {content.description && (
+            <p className="mt-4 text-muted-foreground leading-relaxed max-w-xl">{content.description}</p>
+          )}
+          {content.cta && (
+            <Link to={content.cta_link || '/search'}>
+              <Button className="mt-6 h-11 px-7 rounded-none text-[11px] uppercase tracking-[0.22em] gap-2">
+                {content.cta} <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─────────── HOST CTA ─────────── */
 function HostCta() {
   return (
@@ -310,24 +350,35 @@ const Index = () => {
   const { data: sections = [] } = usePublicLandingSections();
   const sorted = [...cars].sort((a, b) => b.daily_rate - a.daily_rate);
   const [featured, ...rest] = sorted;
-  const rows = [...sections]
-    .filter(isCarRow)
+  const hero = sections.find((section) => isHero(section) && section.is_visible);
+  const dynamic = sections
+    .filter(
+      (section) =>
+        section.is_visible && !isHero(section) &&
+        (isCarRow(section) || section.section_type === 'banner')
+    )
     .sort((a, b) => a.sort_order - b.sort_order);
+  const hasCarRow = dynamic.some(isCarRow);
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <Hero featured={featured || null} />
+      <Hero featured={featured || null} content={heroContent(hero)} />
       <Categories />
-      {rows.length > 0
-        ? rows.map((section) => <DynamicCarRow key={section.id} section={section} />)
-        : rest.length > 0 && (
-            <CarRowSection
-              title="Sélection du moment."
-              subtitle="Disponibles"
-              cars={rest.slice(0, 6)}
-            />
-          )}
+      {dynamic.map((section) =>
+        section.section_type === 'banner' ? (
+          <BannerSection key={section.id} section={section} />
+        ) : (
+          <DynamicCarRow key={section.id} section={section} />
+        )
+      )}
+      {!hasCarRow && rest.length > 0 && (
+        <CarRowSection
+          title="Sélection du moment."
+          subtitle="Disponibles"
+          cars={rest.slice(0, 6)}
+        />
+      )}
       <HostCta />
       <Footer />
     </div>

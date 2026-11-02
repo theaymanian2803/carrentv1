@@ -97,3 +97,17 @@ export const useAdminSetSubscription = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.admin.subscriptions }),
   });
 };
+
+export const useAdminDemoData = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => data.admin.demoData(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.admin.cars });
+      qc.invalidateQueries({ queryKey: queryKeys.admin.stats });
+      qc.invalidateQueries({ queryKey: queryKeys.landing });
+      qc.invalidateQueries({ queryKey: ["cars"] });
+      qc.invalidateQueries({ queryKey: queryKeys.subscription });
+    },
+  });
+};

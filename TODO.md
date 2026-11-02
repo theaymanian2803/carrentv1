@@ -7,33 +7,29 @@ the sale-readiness work around them.
 
 ## 0. Decide first (30–45 min)
 
-- [ ] **Onboarding shape** — pick one:
-  - A. guided checklist on `/admin` (simplest, no tour library)
-  - B. step-by-step product tour with `data-tour` anchors (closest to `workflow/onboarding-workflow.md`)
-  - C. setup wizard that runs before the admin (DB check → admin account → first car → publish)
-- [ ] **Demo data** — ship seeded demo cars and sections, or start empty with an “Add demo data” button?
-- [ ] **Admin credentials** — do we add a change-email/password screen, or keep bootstrap-env-only?
-- [ ] **First-run gate** — does onboarding block the dashboard until complete, or stay dismissible?
+- [x] **Onboarding shape** — guided checklist on `/admin` (chosen)
+- [x] **Demo data** — “Load demo data” button on the checklist (idempotent)
+- [x] **Admin credentials** — change-password form on the onboarding card
+- [x] **First-run gate** — dismissible checklist, persisted on the profile
 - [ ] **Sale model** — plain template, or license-key gated admin like `dogcatpro`?
 - [ ] **Buyer database** — Pro stays env-configured (current), or add a Setup → Connect Turso screen like the Normal build?
 
 ## 1. Onboarding
 
-- [ ] First-run detection (per user, not global): `onboarding_completed` setting or localStorage
-- [ ] Checklist card on `/admin` with progress: connect DB → admin account → first listing →
-      approve it → add a homepage row → preview storefront
-- [ ] Empty states on owner/admin screens that link to the next step
-- [ ] “Preview storefront” action that opens `/` without losing the admin session
-- [ ] “Add demo data” action (idempotent) for cars + landing rows + one booking
-- [ ] Admin account safety: change password, or a clear “set ADMIN_EMAIL/ADMIN_PASSWORD” note
+- [x] First-run detection (per user, not global): `profiles.onboarding_completed`
+- [x] Checklist card on `/admin` with progress: account → first listing → publish → homepage → preview
+- [x] Empty-state guidance inside the checklist with links to each step
+- [x] “Preview storefront” action that opens `/` in a new tab
+- [x] “Load demo data” action (idempotent) for cars + hero + landing rows
+- [x] Admin account safety: change-password form (email users; guests hidden)
 - [ ] Tour or checklist QA on desktop and mobile
-- [ ] Persist completion so a refresh does not restart onboarding
+- [x] Persist completion so a refresh does not restart onboarding
 
 ## 2. More page controls
 
 Landing page (beyond the current car rows):
-- [ ] Editable **hero**: eyebrow, heading lines, description, primary/secondary CTA, image
-- [ ] Optional **banner/promo** section (image, title, subtitle, CTA, visibility, order)
+- [x] Editable **hero**: eyebrow, heading lines, description, primary/secondary CTA, image
+- [x] Optional **banner/promo** section (image, title, subtitle, CTA, visibility, order)
 - [ ] Optional **text/feature** section (heading, body, 2–4 feature cards)
 - [ ] Optional **testimonials/FAQ** section
 - [ ] Category strip controls (labels/order/visibility) — decide whether it stays fixed
@@ -82,6 +78,7 @@ Other pages:
 
 ## Tomorrow’s first three actions
 
-1. Pick the onboarding shape and demo-data policy.
-2. Build the `/admin` checklist + first-run persistence + “Add demo data”.
-3. Add hero + banner controls to the page builder, then run the full browser walkthrough.
+1. ~~Pick the onboarding shape and demo-data policy.~~ Done — checklist + demo data.
+2. ~~Build the `/admin` checklist + first-run persistence + “Add demo data”.~~ Done.
+3. ~~Add hero + banner controls to the page builder~~ Done. Next: run the full browser walkthrough,
+   decide license/sale model, and finish the remaining sale-readiness items.

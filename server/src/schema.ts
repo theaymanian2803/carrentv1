@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   avatar_url TEXT,
   kyc_status TEXT NOT NULL DEFAULT 'pending' CHECK (kyc_status IN ('pending','verified','rejected')),
   stripe_account_id TEXT,
+  onboarding_completed INTEGER NOT NULL DEFAULT 0 CHECK (onboarding_completed IN (0,1)),
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

@@ -10,6 +10,7 @@ export interface Profile {
   avatar_url: string | null;
   kyc_status: KycStatus;
   stripe_account_id: string | null;
+  onboarding_completed: number;
   created_at: string;
   updated_at: string;
 }

@@ -31,6 +31,14 @@ const applyMigrations = async (d: Client): Promise<void> => {
   await d.execute(
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub ON users(google_sub) WHERE google_sub IS NOT NULL"
   );
+
+  const profiles = await d.execute("PRAGMA table_info(profiles)");
+  const profileColumns = new Set(profiles.rows.map((row) => String(row.name)));
+  if (!profileColumns.has("onboarding_completed")) {
+    await d.execute(
+      "ALTER TABLE profiles ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0"
+    );
+  }
 };
 
 const ensureAdmin = async (env: Env, d: Client): Promise<void> => {

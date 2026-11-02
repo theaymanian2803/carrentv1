@@ -67,6 +67,12 @@ export const apiAdapter: DataClient = {
       }
     },
     getToken,
+    changePassword: async (currentPassword, newPassword) => {
+      await apiFetch("/me/password", {
+        method: "POST",
+        body: { current_password: currentPassword, new_password: newPassword },
+      });
+    },
   },
 
   profile: {
@@ -161,6 +167,10 @@ export const apiAdapter: DataClient = {
     setSubscription: async (id, input) => {
       await apiFetch(`/admin/subscriptions/${id}`, { method: "PATCH", body: input });
     },
+    demoData: () =>
+      apiFetch<{ seeded: boolean; cars: number; sections: number }>("/admin/demo-data", {
+        method: "POST",
+      }),
   },
 
   media: {

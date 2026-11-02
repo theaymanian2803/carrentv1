@@ -182,9 +182,14 @@ export interface DataClient {
     me(): Promise<{ user: AuthUser; profile: Profile | null; roles: AppRole[] }>;
     logout(): Promise<void>;
     getToken(): string | null;
+    changePassword(currentPassword: string, newPassword: string): Promise<void>;
   };
   profile: {
-    update(input: { full_name?: string; avatar_url?: string }): Promise<Profile>;
+    update(input: {
+      full_name?: string;
+      avatar_url?: string;
+      onboarding_completed?: boolean;
+    }): Promise<Profile>;
   };
   cars: {
     list(filters?: CarFilters): Promise<CarWithOwner[]>;
@@ -230,6 +235,7 @@ export interface DataClient {
     removeBooking(id: string): Promise<void>;
     subscriptions(): Promise<AdminSubscription[]>;
     setSubscription(id: string, input: { plan: "free" | "pro"; status: string }): Promise<void>;
+    demoData(): Promise<{ seeded: boolean; cars: number; sections: number }>;
   };
   media: {
     upload(file: File): Promise<{ url: string }>;
