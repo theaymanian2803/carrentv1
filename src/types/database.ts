@@ -51,6 +51,9 @@ export interface Booking {
   owner_payout: number;
   total_price: number;
   status: BookingStatus;
+  renter_phone?: string | null;
+  renter_email?: string | null;
+  renter_notes?: string | null;
   created_at: string;
   updated_at: string;
 }
