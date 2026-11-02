@@ -3,7 +3,9 @@
 > **Backend update (2026-11-02):** the Supabase implementation described below has been
 > replaced. The app now runs on **Turso (libSQL)** behind a **Hono API on Cloudflare
 > Workers**, with TanStack Query on the frontend, JWT + PBKDF2 auth, media stored in the
-> database, and PayPal subscriptions ported to the worker. See
+> database, and PayPal subscriptions ported to the worker. Sign-in supports email/password,
+> **Google OAuth**, and **guest sessions** (guests can book and later upgrade by signing in
+> with Google). See
 > `docs/superpowers/specs/2026-11-02-turso-pro-backend-design.md`.
 >
 > **Run locally**

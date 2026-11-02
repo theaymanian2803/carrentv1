@@ -1,10 +1,32 @@
 import { Hono } from "hono";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { AppEnv } from "../env";
 import { db } from "../db";
-import { requireAuth, signToken } from "../auth";
+import {
+  clearSessionCookie,
+  currentUserId,
+  requireAuth,
+  setSessionCookie,
+  signToken,
+} from "../auth";
 import { hashPassword, verifyPassword } from "../password";
+import { ensureUserRecords } from "../lib/users";
+import {
+  appOrigin,
+  codeChallenge,
+  exchangeGoogleCode,
+  fetchGoogleProfile,
+  googleAuthorizeUrl,
+  googleConfigured,
+  googleRedirectUri,
+  randomToken,
+  upsertGoogleUser,
+} from "../lib/google";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const OAUTH_STATE_COOKIE = "carshare_oauth_state";
+const OAUTH_VERIFIER_COOKIE = "carshare_oauth_verifier";
+const OAUTH_TTL_SECONDS = 10 * 60;
 const now = (): string => new Date().toISOString();
 const readJson = async <T>(c: { req: { json: () => Promise<unknown> } }): Promise<T | null> => {
   try {
@@ -71,7 +93,7 @@ export const authRoutes = (app: Hono<AppEnv>): void => {
       ]);
 
       const token = await signToken(c.env, { id, email });
-      return c.json({ token, user: { id, email, fullName } }, 201);
+      return c.json({ token, user: { id, email, fullName, isGuest: false } }, 201);
     } catch (err) {
       console.error("[auth] register failed:", err instanceof Error ? err.message : err);
       return c.json({ error: "Registration failed" }, 500);
@@ -97,7 +119,7 @@ export const authRoutes = (app: Hono<AppEnv>): void => {
     const token = await signToken(c.env, { id: String(user.id), email: String(user.email) });
     return c.json({
       token,
-      user: { id: String(user.id), email: String(user.email), fullName: user.name },
+      user: { id: String(user.id), email: String(user.email), fullName: user.name, isGuest: false },
     });
   });
 
@@ -105,7 +127,7 @@ export const authRoutes = (app: Hono<AppEnv>): void => {
     const userId = c.get("userId");
     const d = db(c.env);
     const [userRes, profileRes, rolesRes] = await Promise.all([
-      d.execute({ sql: "SELECT id, email, name FROM users WHERE id = ?", args: [userId] }),
+      d.execute({ sql: "SELECT id, email, name, is_guest FROM users WHERE id = ?", args: [userId] }),
       d.execute({ sql: "SELECT * FROM profiles WHERE user_id = ?", args: [userId] }),
       d.execute({ sql: "SELECT role FROM user_roles WHERE user_id = ?", args: [userId] }),
     ]);
@@ -115,10 +137,96 @@ export const authRoutes = (app: Hono<AppEnv>): void => {
         id: String(userRes.rows[0].id),
         email: String(userRes.rows[0].email),
         fullName: userRes.rows[0].name,
+        isGuest: Number(userRes.rows[0].is_guest) === 1,
       },
       profile: profileRes.rows[0] ?? null,
       roles: rolesRes.rows.map((r) => String(r.role)),
     });
+  });
+
+  auth.post("/guest", async (c) => {
+    const id = crypto.randomUUID();
+    const email = `guest-${id.slice(0, 8)}@guests.carshare.local`;
+    const name = "Invité";
+    const passwordHash = await hashPassword(randomToken(24));
+
+    await db(c.env).execute({
+      sql: `INSERT INTO users (id, email, password_hash, name, is_guest, created_at)
+            VALUES (?, ?, ?, ?, 1, ?)`,
+      args: [id, email, passwordHash, name, now()],
+    });
+    await ensureUserRecords(db(c.env), { id, email, name });
+
+    const token = await signToken(c.env, { id, email });
+    setSessionCookie(c, token);
+    return c.json({ token, user: { id, email, fullName: name, isGuest: true } }, 201);
+  });
+
+  auth.post("/logout", (c) => {
+    clearSessionCookie(c);
+    deleteCookie(c, OAUTH_STATE_COOKIE, { path: "/" });
+    deleteCookie(c, OAUTH_VERIFIER_COOKIE, { path: "/" });
+    return c.json({ ok: true });
+  });
+
+  auth.get("/google", async (c) => {
+    if (!googleConfigured(c.env)) {
+      return c.json({ error: "Google sign-in is not configured" }, 503);
+    }
+
+    const state = randomToken(32);
+    const verifier = randomToken(32);
+    const challenge = await codeChallenge(verifier);
+    const secure = new URL(c.req.url).protocol === "https:";
+    const options = {
+      path: "/",
+      httpOnly: true,
+      sameSite: "Lax" as const,
+      secure,
+      maxAge: OAUTH_TTL_SECONDS,
+    };
+
+    setCookie(c, OAUTH_STATE_COOKIE, state, options);
+    setCookie(c, OAUTH_VERIFIER_COOKIE, verifier, options);
+
+    const redirectUri = googleRedirectUri(c.env, c.req.url);
+    return c.redirect(googleAuthorizeUrl(c.env, { redirectUri, state, challenge }), 302);
+  });
+
+  auth.get("/google/callback", async (c) => {
+    const origin = appOrigin(c.env, c.req.url);
+    const failure = `${origin}/auth?google=error`;
+    const url = new URL(c.req.url);
+    const error = url.searchParams.get("error");
+    const code = url.searchParams.get("code") ?? "";
+    const state = url.searchParams.get("state") ?? "";
+    const expectedState = getCookie(c, OAUTH_STATE_COOKIE) ?? "";
+    const verifier = getCookie(c, OAUTH_VERIFIER_COOKIE) ?? "";
+
+    deleteCookie(c, OAUTH_STATE_COOKIE, { path: "/" });
+    deleteCookie(c, OAUTH_VERIFIER_COOKIE, { path: "/" });
+
+    if (!googleConfigured(c.env) || error) return c.redirect(failure, 302);
+    if (!code || !state || !expectedState || state !== expectedState || !verifier) {
+      return c.redirect(failure, 302);
+    }
+
+    try {
+      const accessToken = await exchangeGoogleCode(c.env, {
+        code,
+        verifier,
+        redirectUri: googleRedirectUri(c.env, c.req.url),
+      });
+      const profile = await fetchGoogleProfile(accessToken);
+      const signedInUserId = await currentUserId(c);
+      const userId = await upsertGoogleUser(c.env, db(c.env), profile, signedInUserId);
+      const token = await signToken(c.env, { id: userId, email: profile.email });
+      setSessionCookie(c, token);
+      return c.redirect(`${origin}/auth?google=success`, 302);
+    } catch (err) {
+      console.error("[auth] Google callback failed:", err instanceof Error ? err.message : err);
+      return c.redirect(failure, 302);
+    }
   });
 
   app.route("/auth", auth);

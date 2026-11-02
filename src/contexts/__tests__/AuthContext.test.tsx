@@ -12,6 +12,7 @@ vi.mock("@/lib/data", () => ({
       me: vi.fn(),
       login: vi.fn(),
       register: vi.fn(),
+      guest: vi.fn(),
       logout: vi.fn(),
       getToken: vi.fn(),
     },
@@ -22,6 +23,7 @@ const auth = data.auth as unknown as {
   me: ReturnType<typeof vi.fn>;
   login: ReturnType<typeof vi.fn>;
   register: ReturnType<typeof vi.fn>;
+  guest: ReturnType<typeof vi.fn>;
   logout: ReturnType<typeof vi.fn>;
   getToken: ReturnType<typeof vi.fn>;
 };
@@ -123,6 +125,38 @@ describe("AuthContext", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.hasRole("admin")).toBe(true);
     expect(result.current.hasRole("owner")).toBe(false);
+  });
+
+  it("starts a guest session", async () => {
+    auth.guest.mockResolvedValue({
+      token: "guest-token",
+      user: {
+        id: "g1",
+        email: "guest-abc@guests.carshare.local",
+        fullName: "Invité",
+        isGuest: true,
+      },
+    });
+    auth.me.mockResolvedValue({
+      user: {
+        id: "g1",
+        email: "guest-abc@guests.carshare.local",
+        fullName: "Invité",
+        isGuest: true,
+      },
+      profile: { ...profile, full_name: "Invité" },
+      roles: ["renter"],
+    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.continueAsGuest();
+    });
+
+    expect(auth.guest).toHaveBeenCalledTimes(1);
+    expect(result.current.user?.isGuest).toBe(true);
+    expect(result.current.roles).toEqual(["renter"]);
   });
 
   it("clears the session and private cache when a request reports 401", async () => {

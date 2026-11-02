@@ -53,8 +53,19 @@ export const apiAdapter: DataClient = {
         setToken(session.token);
         return session;
       }),
+    guest: () =>
+      apiFetch<Session>("/auth/guest", { method: "POST" }).then((session) => {
+        setToken(session.token);
+        return session;
+      }),
     me: () => apiFetch("/auth/me"),
-    logout: () => setToken(null),
+    logout: async () => {
+      try {
+        await apiFetch("/auth/logout", { method: "POST" });
+      } finally {
+        setToken(null);
+      }
+    },
     getToken,
   },
 

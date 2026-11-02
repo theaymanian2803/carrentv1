@@ -26,6 +26,7 @@ export interface AuthUser {
   id: string;
   email: string;
   fullName: string | null;
+  isGuest: boolean;
 }
 
 export interface Session {
@@ -150,6 +151,7 @@ export interface AdminUser {
   avatar_url: string | null;
   kyc_status: string;
   stripe_account_id: string | null;
+  is_guest: boolean;
   plan: string;
   status: string;
   created_at: string;
@@ -176,8 +178,9 @@ export interface DataClient {
       role: "owner" | "renter";
     }): Promise<Session>;
     login(input: { email: string; password: string }): Promise<Session>;
+    guest(): Promise<Session>;
     me(): Promise<{ user: AuthUser; profile: Profile | null; roles: AppRole[] }>;
-    logout(): void;
+    logout(): Promise<void>;
     getToken(): string | null;
   };
   profile: {

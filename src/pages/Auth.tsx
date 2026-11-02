@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,18 +7,38 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
-import { Car } from 'lucide-react';
+import { Car, Chrome, UserRound } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, continueAsGuest, startGoogleSignIn, refresh } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'owner' | 'renter'>('renter');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const google = params.get('google');
+    if (google === 'success') {
+      window.history.replaceState({}, '', '/auth');
+      void refresh().then(() => {
+        toast({ title: 'Connecté avec Google', description: 'Bienvenue !' });
+        navigate('/');
+      });
+    } else if (google === 'error') {
+      window.history.replaceState({}, '', '/auth');
+      toast({
+        title: 'Connexion Google échouée',
+        description: 'Réessayez ou utilisez un autre mode de connexion.',
+        variant: 'destructive',
+      });
+    }
+  }, []);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +81,26 @@ const Auth = () => {
     }
   };
 
+  const handleGuest = async () => {
+    setLoading(true);
+    try {
+      await continueAsGuest();
+      navigate('/');
+      toast({
+        title: 'Mode invité activé',
+        description: 'Vous pouvez réserver dès maintenant. Connectez-vous avec Google plus tard pour retrouver votre compte.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err instanceof Error ? err.message : 'Impossible de démarrer une session invitée',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -74,6 +114,14 @@ const Auth = () => {
             <CardDescription>Connectez-vous ou créez un compte</CardDescription>
           </CardHeader>
           <CardContent>
+            <Button variant="outline" className="w-full gap-2" onClick={startGoogleSignIn}>
+              <Chrome className="h-4 w-4" /> Continuer avec Google
+            </Button>
+            <div className="my-4 flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">ou</span>
+              <Separator className="flex-1" />
+            </div>
             <Tabs defaultValue="signin">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Connexion</TabsTrigger>
@@ -128,6 +176,14 @@ const Auth = () => {
                 </form>
               </TabsContent>
             </Tabs>
+            <Button
+              variant="ghost"
+              className="mt-4 w-full gap-2 text-muted-foreground"
+              onClick={handleGuest}
+              disabled={loading}
+            >
+              <UserRound className="h-4 w-4" /> Continuer en tant qu'invité
+            </Button>
           </CardContent>
         </Card>
       </div>

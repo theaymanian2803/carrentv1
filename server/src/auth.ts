@@ -1,7 +1,11 @@
 import { SignJWT, jwtVerify } from "jose";
-import type { MiddlewareHandler } from "hono";
+import type { Context, MiddlewareHandler } from "hono";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { AppEnv } from "./env";
 import { db } from "./db";
+
+export const SESSION_COOKIE = "carshare_session";
+const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
 
 const SECRET = (secret: string): Uint8Array => new TextEncoder().encode(secret);
 
@@ -26,8 +30,39 @@ const bearerToken = (header: string | undefined): string => {
   return header.slice(7).trim();
 };
 
+const requestToken = (c: Context<AppEnv>): string => {
+  const bearer = bearerToken(c.req.header("Authorization"));
+  if (bearer) return bearer;
+  return getCookie(c, SESSION_COOKIE) ?? "";
+};
+
+export const setSessionCookie = (c: Context<AppEnv>, token: string): void => {
+  setCookie(c, SESSION_COOKIE, token, {
+    path: "/",
+    httpOnly: true,
+    sameSite: "Lax",
+    secure: new URL(c.req.url).protocol === "https:",
+    maxAge: SESSION_MAX_AGE,
+  });
+};
+
+export const clearSessionCookie = (c: Context<AppEnv>): void => {
+  deleteCookie(c, SESSION_COOKIE, { path: "/" });
+};
+
+export const currentUserId = async (c: Context<AppEnv>): Promise<string | null> => {
+  const token = requestToken(c);
+  if (!token) return null;
+  try {
+    const payload = await verifyToken(token, c.env.AUTH_SECRET);
+    return payload.sub ? String(payload.sub) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const token = bearerToken(c.req.header("Authorization"));
+  const token = requestToken(c);
   if (!token) return c.json({ error: "Unauthorized" }, 401);
   try {
     const payload = await verifyToken(token, c.env.AUTH_SECRET);
@@ -40,7 +75,7 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
 };
 
 export const optionalAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const token = bearerToken(c.req.header("Authorization"));
+  const token = requestToken(c);
   if (token) {
     try {
       const payload = await verifyToken(token, c.env.AUTH_SECRET);

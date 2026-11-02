@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL COLLATE NOCASE UNIQUE,
   password_hash TEXT NOT NULL,
   name TEXT,
+  google_sub TEXT,
+  is_guest INTEGER NOT NULL DEFAULT 0 CHECK (is_guest IN (0,1)),
   created_at TEXT NOT NULL
 );
 
@@ -125,6 +127,9 @@ CREATE INDEX IF NOT EXISTS idx_reviews_booking ON reviews(booking_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_user ON user_roles(user_id);
 CREATE INDEX IF NOT EXISTS idx_landing_sort ON landing_sections(sort_order);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub
+  ON users(google_sub)
+  WHERE google_sub IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_paypal
   ON subscriptions(paypal_subscription_id)
   WHERE paypal_subscription_id IS NOT NULL;

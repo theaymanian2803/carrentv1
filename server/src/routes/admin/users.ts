@@ -18,7 +18,7 @@ export const adminUserRoutes = (app: Hono<AppEnv>): void => {
     const d = db(c.env);
     const [userRes, roleRes] = await Promise.all([
       d.execute(`
-        SELECT u.id, u.email, u.created_at,
+        SELECT u.id, u.email, u.created_at, u.is_guest,
                p.full_name, p.avatar_url, p.kyc_status, p.stripe_account_id,
                s.plan, s.status AS subscription_status
         FROM users u
@@ -39,6 +39,7 @@ export const adminUserRoutes = (app: Hono<AppEnv>): void => {
       userRes.rows.map((row) => ({
         id: String(row.id),
         email: String(row.email),
+        is_guest: Number(row.is_guest) === 1,
         full_name: row.full_name === null ? null : String(row.full_name),
         avatar_url: row.avatar_url === null ? null : String(row.avatar_url),
         kyc_status: row.kyc_status === null ? "pending" : String(row.kyc_status),

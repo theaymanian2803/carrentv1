@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { data } from '@/lib/data';
 import { onAuthFailure } from '@/lib/authEvents';
@@ -17,6 +17,8 @@ interface AuthContextType {
     role: 'owner' | 'renter';
   }) => Promise<{ user: AuthUser; roles: AppRole[] }>;
   signOut: () => Promise<void>;
+  continueAsGuest: () => Promise<{ user: AuthUser; roles: AppRole[] }>;
+  startGoogleSignIn: () => void;
   refresh: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
 }
@@ -29,16 +31,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const userRef = useRef<AuthUser | null>(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const load = useCallback(async () => {
-    if (!data.auth.getToken()) {
-      setUser(null);
-      setProfile(null);
-      setRoles([]);
-      setLoading(false);
-      return null;
-    }
-
     try {
       const result = await data.auth.me();
       setUser(result.user);
@@ -46,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRoles(result.roles);
       return result;
     } catch {
-      data.auth.logout();
+      void data.auth.logout();
       setUser(null);
       setProfile(null);
       setRoles([]);
@@ -63,7 +62,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(
     () =>
       onAuthFailure(() => {
-        data.auth.logout();
+        if (!userRef.current) return;
+        void data.auth.logout();
         setUser(null);
         setProfile(null);
         setRoles([]);
@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRoles(result.roles);
       return { user: result.user, roles: result.roles };
     } catch (err) {
-      data.auth.logout();
+      void data.auth.logout();
       setUser(null);
       setProfile(null);
       setRoles([]);
@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRoles(result.roles);
       return { user: result.user, roles: result.roles };
     } catch (err) {
-      data.auth.logout();
+      void data.auth.logout();
       setUser(null);
       setProfile(null);
       setRoles([]);
@@ -119,8 +119,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const continueAsGuest = async () => {
+    queryClient.clear();
+    const session = await data.auth.guest();
+    setUser(session.user);
+    try {
+      const result = await data.auth.me();
+      setUser(result.user);
+      setProfile(result.profile);
+      setRoles(result.roles);
+      return { user: result.user, roles: result.roles };
+    } catch (err) {
+      void data.auth.logout();
+      setUser(null);
+      setProfile(null);
+      setRoles([]);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startGoogleSignIn = () => {
+    window.location.href = '/api/auth/google';
+  };
+
   const signOut = async () => {
-    data.auth.logout();
+    await data.auth.logout();
     setUser(null);
     setProfile(null);
     setRoles([]);
@@ -135,7 +160,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, roles, loading, signIn, signUp, signOut, refresh, hasRole }}
+      value={{
+        user,
+        profile,
+        roles,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+        continueAsGuest,
+        startGoogleSignIn,
+        refresh,
+        hasRole,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -9,6 +9,10 @@ export type Env = {
   PAYPAL_BASE?: string;
   PAYPAL_PLAN_ID?: string;
   PAYPAL_WEBHOOK_ID?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  GOOGLE_REDIRECT_URI?: string;
+  ADMIN_EMAILS?: string;
   APP_ORIGIN?: string;
 };
 

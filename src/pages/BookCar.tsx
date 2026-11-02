@@ -87,8 +87,8 @@ const BookCar = () => {
   }, [loading, car, navigate]);
 
   useEffect(() => {
-    if (profile?.full_name) setFullName(profile.full_name);
-    if (user?.email) setEmail(user.email);
+    if (profile?.full_name && profile.full_name !== 'Invité') setFullName(profile.full_name);
+    if (!user?.isGuest && user?.email) setEmail(user.email);
   }, [profile, user]);
 
   const goNext = () => { setStep((s) => Math.min(s + 1, 2)); };

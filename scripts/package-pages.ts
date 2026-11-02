@@ -36,6 +36,10 @@ BEFORE YOU DEPLOY (one-time, 2 values from Turso)
      Optional, for Pro upgrades:
        PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_BASE,
        PAYPAL_PLAN_ID, PAYPAL_WEBHOOK_ID
+     Optional, for Google sign-in:
+       GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+       GOOGLE_REDIRECT_URI = https://<your-domain>/api/auth/google/callback
+       ADMIN_EMAILS = comma-separated Google emails that get admin access
 
 DEPLOY (drag and drop)
   1. Go to https://dash.cloudflare.com -> Workers & Pages -> Create -> Pages
@@ -45,7 +49,10 @@ DEPLOY (drag and drop)
 
 FIRST RUN
   - The first request creates the schema and the admin account from ADMIN_EMAIL /
-    ADMIN_PASSWORD. Sign in at /admin with those credentials.
+    ADMIN_PASSWORD. Sign in at /admin with those credentials, or with Google if
+    the Google variables are configured and your email is in ADMIN_EMAILS.
+  - Visitors can create an account, continue with Google, or continue as a guest.
+    Guests can book a car and later upgrade by signing in with Google.
   - The storefront is live immediately. Demo cars are not seeded in production;
     use Admin -> "Ajouter une annonce" to add your first listing.
   - If you change environment variables later, redeploy the same zip so the

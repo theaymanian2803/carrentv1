@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAdminBookings, useAdminSetBookingStatus } from '@/hooks/queries/useAdmin';
+import { useAdminBookings, useAdminRemoveBooking, useAdminSetBookingStatus } from '@/hooks/queries/useAdmin';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import {
-  CalendarIcon, CheckCircle2, XCircle, Clock, AlertTriangle, Car, User, Phone, Mail,
+  CalendarIcon, CheckCircle2, XCircle, Clock, AlertTriangle, Car, User, Phone, Mail, Trash2,
 } from 'lucide-react';
 import type { OwnerBooking, BookingStatus } from '@/lib/data/types';
 
@@ -37,6 +37,7 @@ const STATUS_CONFIG: Record<BookingStatus, { label: string; color: string; icon:
 const BookingManagement = () => {
   const { data: allBookings = [], isLoading: loading } = useAdminBookings();
   const setStatus = useAdminSetBookingStatus();
+  const removeBooking = useAdminRemoveBooking();
   const bookings = allBookings;
   const [filter, setFilter] = useState<string>('all');
   const [selected, setSelected] = useState<BookingWithDetails | null>(null);
@@ -62,6 +63,21 @@ const BookingManagement = () => {
   };
 
   const filtered = filter === 'all' ? bookings : bookings.filter((b) => b.status === filter);
+
+  const handleDelete = async (bookingId: string) => {
+    if (!window.confirm('Delete this booking permanently?')) return;
+    try {
+      await removeBooking.mutateAsync(bookingId);
+      toast({ title: 'Booking deleted' });
+      if (selected?.id === bookingId) setSelected(null);
+    } catch (err) {
+      toast({
+        title: 'Delete failed',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const counts = STATUS_OPTIONS.reduce(
     (acc, s) => ({ ...acc, [s]: bookings.filter((b) => b.status === s).length }),
@@ -185,6 +201,16 @@ const BookingManagement = () => {
                             ))}
                           </SelectContent>
                         </Select>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          disabled={removeBooking.isPending}
+                          onClick={() => handleDelete(b.id)}
+                          aria-label="Delete booking"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );

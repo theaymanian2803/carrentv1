@@ -207,7 +207,14 @@ const UserManagement = () => {
                           {user.full_name?.[0] ?? '?'}
                         </div>
                         <div>
-                          <p className="font-medium leading-none">{user.full_name || 'Unnamed'}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium leading-none">{user.full_name || 'Unnamed'}</p>
+                            {user.is_guest && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                Invité
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground mt-0.5 font-mono">{user.id.slice(0, 8)}…</p>
                         </div>
                       </div>

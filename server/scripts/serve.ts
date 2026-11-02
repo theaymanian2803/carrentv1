@@ -7,6 +7,11 @@ const env = {
   AUTH_SECRET: process.env.AUTH_SECRET ?? "smoke-secret",
   ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "admin@carshare.dev",
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "admin12345",
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+  ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+  APP_ORIGIN: process.env.APP_ORIGIN,
 } as Env;
 
 Bun.serve({

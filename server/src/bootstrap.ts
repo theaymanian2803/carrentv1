@@ -19,6 +19,20 @@ const tableExists = async (d: Client, name: string): Promise<boolean> => {
   return rows.length > 0;
 };
 
+const applyMigrations = async (d: Client): Promise<void> => {
+  const { rows } = await d.execute("PRAGMA table_info(users)");
+  const columns = new Set(rows.map((row) => String(row.name)));
+  if (!columns.has("google_sub")) {
+    await d.execute("ALTER TABLE users ADD COLUMN google_sub TEXT");
+  }
+  if (!columns.has("is_guest")) {
+    await d.execute("ALTER TABLE users ADD COLUMN is_guest INTEGER NOT NULL DEFAULT 0");
+  }
+  await d.execute(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub ON users(google_sub) WHERE google_sub IS NOT NULL"
+  );
+};
+
 const ensureAdmin = async (env: Env, d: Client): Promise<void> => {
   const email = env.ADMIN_EMAIL!.trim().toLowerCase();
   const password = env.ADMIN_PASSWORD!;
@@ -85,6 +99,7 @@ export async function ensureBootstrap(env: Env): Promise<void> {
   if (!(await tableExists(d, "users"))) {
     await applySchema(d);
   }
+  await applyMigrations(d);
   if (env.ADMIN_EMAIL && env.ADMIN_PASSWORD) {
     await ensureAdmin(env, d);
   }

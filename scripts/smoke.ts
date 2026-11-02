@@ -163,4 +163,22 @@ assert(
   "renter modified another owner's car"
 );
 
+step("a guest can book a live car");
+const guest = await req("/auth/guest", { method: "POST" });
+assert(guest.status === 201, `guest session ${guest.status}`);
+const guestBody = guest.body as { token: string; user: { isGuest: boolean } };
+assert(guestBody.user.isGuest === true, "guest flag missing");
+const guestBooking = await req("/me/bookings", {
+  method: "POST",
+  body: {
+    car_id: carIds[0],
+    start_date: "2027-05-01",
+    end_date: "2027-05-03",
+    renter_phone: "555-0199",
+    renter_email: "guest@example.com",
+  },
+  token: guestBody.token,
+});
+assert(guestBooking.status === 201, `guest booking ${guestBooking.status}`);
+
 console.log("SMOKE OK");

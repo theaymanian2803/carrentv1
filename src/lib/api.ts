@@ -53,6 +53,7 @@ export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promis
     method: init.method ?? "GET",
     headers,
     body,
+    credentials: "include",
   });
 
   if (res.status === 401) {

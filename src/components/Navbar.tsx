@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LogIn, Menu, X, UserCircle, Car } from 'lucide-react';
+import { LogIn, Menu, X, UserCircle, Car, Chrome } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -70,6 +70,11 @@ const Navbar = () => {
                       <AvatarFallback className="text-xs">{initials(profile?.full_name)}</AvatarFallback>
                     </Avatar>
                     <span className="text-xs">{profile?.full_name?.split(' ')[0] || 'Compte'}</span>
+                    {user.isGuest && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">
+                        Invité
+                      </span>
+                    )}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -78,6 +83,11 @@ const Navbar = () => {
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {user.isGuest && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/auth"><Chrome className="mr-2 h-4 w-4" />Créer un compte</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link to="/profile"><UserCircle className="mr-2 h-4 w-4" />Mon profil</Link>
                   </DropdownMenuItem>
