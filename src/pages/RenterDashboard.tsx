@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useBookings, useSetBookingStatus } from '@/hooks/queries/useBookings';
+import { useCreateReview, useMyReviews } from '@/hooks/queries/useReviews';
 import Navbar from '@/components/Navbar';
 import ReviewModal from '@/components/ReviewModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,14 +14,9 @@ import { Car, Clock, CheckCircle, DollarSign, MapPin, CalendarDays, XCircle, Sta
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
-import type { Tables } from '@/integrations/supabase/types';
+import type { RenterBooking } from '@/lib/data/types';
 
-type BookingRow = Tables<'bookings'>;
-type CarRow = Tables<'cars'>;
-
-interface BookingWithCar extends BookingRow {
-  car: Pick<CarRow, 'make' | 'model' | 'year' | 'images' | 'address' | 'daily_rate'> | null;
-}
+type BookingWithCar = RenterBooking;
 
 const statusColor: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
@@ -43,32 +39,16 @@ const statusLabels: Record<string, string> = {
 const RenterDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState<BookingWithCar[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [reviewedBookingIds, setReviewedBookingIds] = useState<Set<string>>(new Set());
+  const { data, isLoading: loading } = useBookings();
+  const { data: myReviews = [] } = useMyReviews();
+  const setStatus = useSetBookingStatus();
+  const createReview = useCreateReview();
+
+  const bookings = data?.asRenter ?? [];
+  const reviewedBookingIds = new Set(myReviews.map((r) => r.booking_id));
+
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviewBooking, setReviewBooking] = useState<BookingWithCar | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    const fetchData = async () => {
-      setLoading(true);
-      const [bookingsRes, reviewsRes] = await Promise.all([
-        supabase.from('bookings').select('*, car:cars(make, model, year, images, address, daily_rate)').eq('renter_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('reviews').select('booking_id').eq('reviewer_id', user.id),
-      ]);
-      if (bookingsRes.error) {
-        toast({ title: 'Erreur de chargement des réservations', description: bookingsRes.error.message, variant: 'destructive' });
-      } else {
-        setBookings((bookingsRes.data as unknown as BookingWithCar[]) || []);
-      }
-      if (reviewsRes.data) {
-        setReviewedBookingIds(new Set(reviewsRes.data.map(r => r.booking_id)));
-      }
-      setLoading(false);
-    };
-    fetchData();
-  }, [user]);
 
   const upcoming = bookings.filter(b => ['pending', 'approved', 'active'].includes(b.status));
   const past = bookings.filter(b => b.status === 'completed');
@@ -76,12 +56,15 @@ const RenterDashboard = () => {
   const totalSpent = past.reduce((s, b) => s + Number(b.total_price), 0);
 
   const handleCancel = async (id: string) => {
-    const { error } = await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id);
-    if (error) {
-      toast({ title: 'Annulation échouée', description: error.message, variant: 'destructive' });
-    } else {
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' as const } : b));
+    try {
+      await setStatus.mutateAsync({ id, status: 'cancelled' });
       toast({ title: 'Réservation annulée' });
+    } catch (err) {
+      toast({
+        title: 'Annulation échouée',
+        description: err instanceof Error ? err.message : 'Réessayez plus tard.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -91,25 +74,21 @@ const RenterDashboard = () => {
   };
 
   const handleSubmitReview = async (rating: number, comment: string) => {
-    if (!user || !reviewBooking) return;
-    const { data: carData } = await supabase.from('cars').select('owner_id').eq('id', reviewBooking.car_id).single();
-    if (!carData) {
-      toast({ title: 'Erreur', description: 'Impossible de trouver le propriétaire.', variant: 'destructive' });
-      return;
-    }
-    const { error } = await supabase.from('reviews').insert({
-      booking_id: reviewBooking.id,
-      reviewer_id: user.id,
-      reviewee_id: carData.owner_id,
-      rating,
-      comment: comment || null,
-    });
-    if (error) {
-      toast({ title: 'Échec de l\'avis', description: error.message, variant: 'destructive' });
-    } else {
+    if (!reviewBooking) return;
+    try {
+      await createReview.mutateAsync({
+        booking_id: reviewBooking.id,
+        rating,
+        comment: comment || undefined,
+      });
       toast({ title: 'Avis envoyé !', description: 'Merci pour votre retour.' });
-      setReviewedBookingIds(prev => new Set(prev).add(reviewBooking.id));
       setReviewModalOpen(false);
+    } catch (err) {
+      toast({
+        title: 'Échec de l\'avis',
+        description: err instanceof Error ? err.message : 'Réessayez plus tard.',
+        variant: 'destructive',
+      });
     }
   };
 

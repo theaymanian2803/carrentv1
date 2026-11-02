@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useMyCars, useUpdateCar, useDeleteCar } from '@/hooks/queries/useCars';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,9 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { Car, MapPin, DollarSign, Trash2 } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
-
-type CarRow = Tables<'cars'>;
+import type { Car as CarRow } from '@/lib/data/types';
 
 const statusColors: Record<string, string> = {
   pending_approval: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -21,31 +17,34 @@ const statusColors: Record<string, string> = {
 interface FleetGridProps { onAddCar: () => void; }
 
 const FleetGrid = ({ onAddCar }: FleetGridProps) => {
-  const { user } = useAuth();
-  const [cars, setCars] = useState<CarRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchCars = async () => {
-    if (!user) return;
-    setLoading(true);
-    const { data, error } = await supabase.from('cars').select('*').eq('owner_id', user.id).order('created_at', { ascending: false });
-    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); }
-    else { setCars(data || []); }
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchCars(); }, [user]);
+  const { data: cars = [], isLoading: loading } = useMyCars();
+  const updateCar = useUpdateCar();
+  const deleteCarMutation = useDeleteCar();
 
   const toggleActive = async (car: CarRow) => {
-    const { error } = await supabase.from('cars').update({ is_active: !car.is_active }).eq('id', car.id);
-    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); }
-    else { toast({ title: car.is_active ? 'Voiture désactivée' : 'Voiture activée' }); fetchCars(); }
+    try {
+      await updateCar.mutateAsync({ id: car.id, input: { is_active: !car.is_active } });
+      toast({ title: car.is_active ? 'Voiture désactivée' : 'Voiture activée' });
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err instanceof Error ? err.message : 'Réessayez plus tard.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const deleteCar = async (carId: string) => {
-    const { error } = await supabase.from('cars').delete().eq('id', carId);
-    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); }
-    else { toast({ title: 'Voiture supprimée' }); fetchCars(); }
+  const removeCar = async (carId: string) => {
+    try {
+      await deleteCarMutation.mutateAsync(carId);
+      toast({ title: 'Voiture supprimée' });
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err instanceof Error ? err.message : 'Réessayez plus tard.',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (loading) {
@@ -73,7 +72,7 @@ const FleetGrid = ({ onAddCar }: FleetGridProps) => {
                 <div className="flex items-center justify-between"><div className="flex items-center gap-1 text-primary font-semibold"><DollarSign className="h-4 w-4" />{car.daily_rate}/jour</div><Badge variant="outline">{car.category}</Badge></div>
                 <div className="flex items-center justify-between pt-2 border-t">
                   <div className="flex items-center gap-2"><Switch checked={car.is_active} onCheckedChange={() => toggleActive(car)} /><span className="text-xs text-muted-foreground">{car.is_active ? 'Active' : 'Inactive'}</span></div>
-                  <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => deleteCar(car.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => removeCar(car.id)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </CardContent>
             </Card>

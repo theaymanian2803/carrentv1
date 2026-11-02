@@ -1,7 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { data } from '@/lib/data';
+import { useSubscription } from '@/hooks/useSubscription';
+import { queryKeys } from '@/lib/queryKeys';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +46,9 @@ interface AddCarFormProps {
 
 const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }: AddCarFormProps) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const { listingCount, listingLimit } = useSubscription();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -115,16 +120,18 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
     const urls: string[] = [];
 
     for (const file of form.images) {
-      const ext = file.name.split('.').pop();
-      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from('car-images').upload(path, file);
-      if (error) {
-        toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+      try {
+        const { url } = await data.media.upload(file);
+        urls.push(url);
+      } catch (err) {
+        toast({
+          title: 'Upload failed',
+          description: err instanceof Error ? err.message : 'Please try again.',
+          variant: 'destructive',
+        });
         setUploading(false);
         return [];
       }
-      const { data: urlData } = supabase.storage.from('car-images').getPublicUrl(path);
-      urls.push(urlData.publicUrl);
     }
     setUploading(false);
     return urls;
@@ -134,17 +141,11 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
     if (!user) return;
     setSubmitting(true);
 
-    // Check listing limit before submitting
-    const { data: limitData } = await supabase.rpc('get_listing_limit', { _user_id: user.id });
-    const { data: countData } = await supabase.rpc('get_listing_count', { _user_id: user.id });
-    const limit = (limitData as number) ?? 3;
-    const count = (countData as number) ?? 0;
-
-    if (count >= limit) {
+    if (listingCount >= listingLimit) {
       setSubmitting(false);
       toast({
         title: 'Listing limit reached',
-        description: `Your current plan allows ${limit} listings. Upgrade to add more cars.`,
+        description: `Your current plan allows ${listingLimit} listings. Upgrade to add more cars.`,
         variant: 'destructive',
       });
       return;
@@ -156,8 +157,7 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
       return;
     }
 
-    const { error } = await supabase.from('cars').insert({
-      owner_id: user.id,
+    const input = {
       make: form.make,
       model: form.model,
       year: form.year,
@@ -167,13 +167,16 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
       description: form.description,
       features: form.features.reduce((acc, f) => ({ ...acc, [f]: true }), {}),
       images: imageUrls,
-      status: defaultStatus,
-    });
+    };
 
-    setSubmitting(false);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      if (defaultStatus === 'live' && hasRole('admin')) {
+        await data.admin.createCar({ ...input, owner_id: user.id, status: 'live' });
+      } else {
+        await data.cars.create(input);
+      }
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myCars });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.subscription });
       toast({
         title: 'Car listed!',
         description: defaultStatus === 'live'
@@ -181,6 +184,14 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
           : 'Your car is pending admin approval.',
       });
       navigate(backPath);
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 

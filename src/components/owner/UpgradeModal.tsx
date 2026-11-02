@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, Crown, Zap, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { data } from '@/lib/data';
+import { queryKeys } from '@/lib/queryKeys';
 
 interface UpgradeModalProps {
   open: boolean;
@@ -36,6 +38,7 @@ const plans = [
 
 const UpgradeModal = ({ open, onOpenChange, currentPlan, listingCount, onUpgradeComplete }: UpgradeModalProps) => {
   const [processing, setProcessing] = useState(false);
+  const queryClient = useQueryClient();
 
   // Handle return from PayPal approval
   useEffect(() => {
@@ -58,34 +61,18 @@ const UpgradeModal = ({ open, onOpenChange, currentPlan, listingCount, onUpgrade
   const activateSubscription = async (subscriptionId: string) => {
     setProcessing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-subscription`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ subscription_id: subscriptionId }),
-        }
-      );
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Activation failed');
-
+      await data.subscriptions.activate(subscriptionId);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.subscription });
       toast({
         title: '🎉 Welcome to Pro!',
         description: 'You can now list up to 15 cars. Enjoy your upgraded plan!',
       });
       onUpgradeComplete?.();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Activation error:', err);
       toast({
         title: 'Activation issue',
-        description: err.message || 'Please contact support if your payment went through.',
+        description: err instanceof Error ? err.message : 'Please contact support if your payment went through.',
         variant: 'destructive',
       });
     } finally {
@@ -96,41 +83,17 @@ const UpgradeModal = ({ open, onOpenChange, currentPlan, listingCount, onUpgrade
   const handleUpgrade = async () => {
     setProcessing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
       const currentUrl = window.location.origin + '/owner';
-
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-paypal-subscription`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            return_url: `${currentUrl}?subscription=success`,
-            cancel_url: `${currentUrl}?subscription=cancelled`,
-          }),
-        }
+      const { approvalUrl } = await data.subscriptions.createCheckout(
+        `${currentUrl}?subscription=success`,
+        `${currentUrl}?subscription=cancelled`
       );
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create subscription');
-
-      if (data.approval_url) {
-        // Append subscription_id to return URL for activation
-        const approvalUrl = new URL(data.approval_url);
-        window.location.href = approvalUrl.toString();
-      } else {
-        throw new Error('No approval URL received from PayPal');
-      }
-    } catch (err: any) {
+      window.location.href = approvalUrl;
+    } catch (err) {
       console.error('Upgrade error:', err);
       toast({
         title: 'Upgrade failed',
-        description: err.message || 'Something went wrong. Please try again.',
+        description: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
       setProcessing(false);
