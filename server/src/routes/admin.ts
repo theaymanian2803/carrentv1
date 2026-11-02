@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { AppEnv } from "../env";
 import { db } from "../db";
 import { requireAdmin, requireAuth } from "../auth";
+import { requireLicensed } from "../license";
 import { adminUserRoutes } from "./admin/users";
 import { adminStatsRoutes } from "./admin/stats";
 import { adminCarRoutes } from "./admin/cars";
@@ -14,6 +15,7 @@ export const adminRoutes = (app: Hono<AppEnv>): void => {
   const admin = new Hono<AppEnv>();
   admin.use("*", requireAuth);
   admin.use("*", requireAdmin);
+  admin.use("*", requireLicensed);
 
   adminUserRoutes(admin);
   adminStatsRoutes(admin);

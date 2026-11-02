@@ -11,7 +11,8 @@ the sale-readiness work around them.
 - [x] **Demo data** — “Load demo data” button on the checklist (idempotent)
 - [x] **Admin credentials** — change-password form on the onboarding card
 - [x] **First-run gate** — dismissible checklist, persisted on the profile
-- [ ] **Sale model** — plain template, or license-key gated admin like `dogcatpro`?
+- [x] **Sale model** — v1: Ed25519-signed, domain-bound license keys verified
+      locally, with a minting script. Hosted issuance server is a later step.
 - [ ] **Buyer database** — Pro stays env-configured (current), or add a Setup → Connect Turso screen like the Normal build?
 
 ## 1. Onboarding

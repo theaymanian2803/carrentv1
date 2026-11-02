@@ -14,6 +14,9 @@ export type Env = {
   GOOGLE_REDIRECT_URI?: string;
   ADMIN_EMAILS?: string;
   APP_ORIGIN?: string;
+  LICENSE_PUBLIC_KEY?: string;
+  LICENSE_PRODUCT?: string;
+  LICENSE_DISABLED?: string;
 };
 
 export type AppEnv = { Bindings: Env; Variables: { userId: string } };

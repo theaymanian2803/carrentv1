@@ -16,6 +16,7 @@ import type {
   KycStatus,
   LandingSection,
   LandingSectionInput,
+  LicenseStatus,
   OwnerBooking,
   Profile,
   RenterBooking,
@@ -179,5 +180,11 @@ export const apiAdapter: DataClient = {
       form.append("file", file);
       return apiFetch<{ url: string }>("/me/upload", { method: "POST", formData: form });
     },
+  },
+
+  license: {
+    status: () => apiFetch<LicenseStatus>("/license/status"),
+    activate: (key: string) =>
+      apiFetch<LicenseStatus>("/license/activate", { method: "POST", body: { key } }),
   },
 };

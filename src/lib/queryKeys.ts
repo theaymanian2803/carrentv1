@@ -7,6 +7,7 @@ export const queryKeys = {
   myReviews: ["my-reviews"] as const,
   profile: ["profile"] as const,
   subscription: ["subscription"] as const,
+  license: ["license"] as const,
   landing: ["landing"] as const,
   admin: {
     users: ["admin", "users"] as const,

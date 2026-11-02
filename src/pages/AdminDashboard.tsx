@@ -11,6 +11,7 @@ import UserManagement from '@/components/admin/UserManagement';
 import ActivityAnalytics from '@/components/admin/ActivityAnalytics';
 import { useAdminStats } from '@/hooks/queries/useAdmin';
 import BookingManagement from '@/components/admin/BookingManagement';
+import AdminLicenseCard from '@/components/admin/AdminLicenseCard';
 import OnboardingChecklist from '@/components/admin/OnboardingChecklist';
 
 const AdminDashboard = () => {
@@ -33,6 +34,7 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
+        <AdminLicenseCard />
         <OnboardingChecklist />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

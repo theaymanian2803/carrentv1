@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCars, useAdminDemoData } from '@/hooks/queries/useAdmin';
 import { useLandingSections } from '@/hooks/useLandingSections';
+import { useLicense } from '@/hooks/useLicense';
 import { useChangePassword, useUpdateProfile } from '@/hooks/queries/useProfile';
 import { isCarRow } from '@/lib/carRows';
 import {
@@ -25,6 +26,7 @@ export default function OnboardingChecklist() {
   const { user, profile, refresh } = useAuth();
   const { data: cars = [] } = useAdminCars();
   const { data: sections = [] } = useLandingSections();
+  const { data: license } = useLicense();
   const demoData = useAdminDemoData();
   const updateProfile = useUpdateProfile();
   const changePassword = useChangePassword();
@@ -63,6 +65,14 @@ export default function OnboardingChecklist() {
       done: hasSection,
       action: { label: 'Éditeur', to: '/admin/page-builder' },
       hint: 'Ajoutez une rangée SUVs, Luxe, etc.',
+    },
+    {
+      label: 'Activer la licence',
+      done: Boolean(license?.licensed),
+      action: null,
+      hint: license?.licensed
+        ? 'Les modifications du back-office sont autorisées.'
+        : 'Collez votre clé dans la carte Licence ci-dessus.',
     },
     {
       label: 'Prévisualiser la boutique',
@@ -171,10 +181,15 @@ export default function OnboardingChecklist() {
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
-          {cars.length === 0 && (
+          {cars.length === 0 && license?.licensed && (
             <Button size="sm" variant="secondary" onClick={loadDemo} disabled={demoData.isPending}>
               Charger des données de démo
             </Button>
+          )}
+          {cars.length === 0 && !license?.licensed && (
+            <span className="text-xs text-muted-foreground">
+              Activez la licence pour charger les données de démo.
+            </span>
           )}
           <Button asChild size="sm" variant="ghost" className="gap-2">
             <Link to="/" target="_blank">

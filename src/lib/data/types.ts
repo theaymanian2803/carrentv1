@@ -169,6 +169,17 @@ export interface AdminSubscription {
   email: string | null;
 }
 
+export interface LicenseStatus {
+  licensed: boolean;
+  disabled: boolean;
+  domain: string;
+  mode: string | null;
+  product: string;
+  expires_at: string | null;
+  key: string | null;
+  reason?: string;
+}
+
 export interface DataClient {
   auth: {
     register(input: {
@@ -239,5 +250,9 @@ export interface DataClient {
   };
   media: {
     upload(file: File): Promise<{ url: string }>;
+  };
+  license: {
+    status(): Promise<LicenseStatus>;
+    activate(key: string): Promise<LicenseStatus>;
   };
 }

@@ -39,6 +39,10 @@ const applyMigrations = async (d: Client): Promise<void> => {
       "ALTER TABLE profiles ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0"
     );
   }
+
+  await d.execute(
+    "CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL)"
+  );
 };
 
 const ensureAdmin = async (env: Env, d: Client): Promise<void> => {

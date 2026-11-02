@@ -15,5 +15,10 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/google/callback
 # Comma-separated Google emails that receive the admin role on sign-in
 ADMIN_EMAILS=
+# Licensing: the public key is safe to bake; the private key stays offline.
+LICENSE_PUBLIC_KEY={"crv":"Ed25519","kty":"OKP","x":"6-hrZAstyAp9_-Dw2TonOYIVUQeQmDJIvLiylVHq-6g"}
+LICENSE_PRODUCT=carshare
+# Set to 1 only for local development to bypass the admin write gate
+LICENSE_DISABLED=
 # Optional: restrict CORS to your deployed origin (defaults to request origin)
 APP_ORIGIN=

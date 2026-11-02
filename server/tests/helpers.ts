@@ -10,6 +10,7 @@ export async function makeTestEnv(): Promise<Env> {
   return {
     TURSO_DATABASE_URL: `file:./.test/${crypto.randomUUID()}.db`,
     AUTH_SECRET: "test-secret",
+    LICENSE_DISABLED: "1",
   };
 }
 

@@ -110,6 +110,10 @@ docs/superpowers/  Design specs, implementation plan, QA checklist
 
 ## Notes
 
+- **Licensing**: admin writes require an Ed25519-signed, domain-bound key. The
+  public key is baked in; the private key lives outside the repo. Mint a key:
+  `cd server && LICENSE_PRIVATE_KEY_PATH=<path> bun run scripts/mint-license.ts --domain <host> --days 365`.
+  Paste it at `/admin`. Set `LICENSE_DISABLED=1` only for local development.
 - PayPal routes return `503 Payments not configured` until the PayPal variables are set.
 - Media uploads are limited to 5 MB and validated by file signature, not just MIME type.
 - Bookings recompute all prices server-side and reject overlapping dates atomically.

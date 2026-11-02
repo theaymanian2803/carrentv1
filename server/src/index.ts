@@ -8,6 +8,7 @@ import { mediaRoutes } from "./routes/media";
 import { meRoutes } from "./routes/me";
 import { adminRoutes } from "./routes/admin";
 import { paymentRoutes } from "./routes/payments";
+import { licenseRoutes } from "./routes/license";
 
 export type { AppEnv };
 
@@ -27,6 +28,7 @@ app.use("*", async (c, next) => {
 });
 
 authRoutes(app);
+licenseRoutes(app);
 catalogRoutes(app);
 mediaRoutes(app);
 meRoutes(app);

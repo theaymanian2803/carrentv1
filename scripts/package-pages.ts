@@ -51,6 +51,8 @@ FIRST RUN
   - The first request creates the schema and the admin account from ADMIN_EMAIL /
     ADMIN_PASSWORD. Sign in at /admin with those credentials, or with Google if
     the Google variables are configured and your email is in ADMIN_EMAILS.
+  - Open /admin and paste the license key from your purchase. The storefront is
+    always visible; the key unlocks admin changes (listings, settings, page rows).
   - Visitors can create an account, continue with Google, or continue as a guest.
     Guests can book a car and later upgrade by signing in with Google.
   - The storefront is live immediately. Demo cars are not seeded in production;
