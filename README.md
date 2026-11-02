@@ -1,110 +1,123 @@
 # CarShare Connect
 
-> **Backend update (2026-11-02):** the Supabase implementation described below has been
-> replaced. The app now runs on **Turso (libSQL)** behind a **Hono API on Cloudflare
-> Workers**, with TanStack Query on the frontend, JWT + PBKDF2 auth, media stored in the
-> database, and PayPal subscriptions ported to the worker. Sign-in supports email/password,
-> **Google OAuth**, and **guest sessions** (guests can book and later upgrade by signing in
-> with Google). See
-> `docs/superpowers/specs/2026-11-02-turso-pro-backend-design.md`.
->
-> **Run locally**
-> 1. `cp server/.dev.vars.example server/.dev.vars` and set `TURSO_DATABASE_URL`,
->    `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
-> 2. `bun install && bun --cwd server install`.
-> 3. `bun run --cwd server dev` (API on 8787) and `bun run dev` (web on 8080, proxies `/api`).
-> 4. For a file-backed local API without Wrangler: `bun run server/scripts/serve.ts`.
->
-> **Package for sale:** `bun run package:pages` writes
-> `C:\Users\PC\Desktop\builds\carshare-cloudflare-pages.zip`.
+A peer-to-peer car rental marketplace. Owners list vehicles, renters book them, and admins
+approve listings, manage users, and oversee bookings.
 
-Gemini said
+## Stack
 
-This is the ultimate, production-grade prompt for Lovable AI. To build a true SaaS platform, we need to introduce a Super Admin role, KYC (Identity Verification), Stripe Connect (for split payments), a Review System, and In-App Messaging.
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Vite 5, TypeScript, Tailwind CSS 3, shadcn/ui |
+| Data fetching | TanStack Query v5 |
+| Backend | Hono on Cloudflare Workers (`/api/*`) |
+| Database | Turso (libSQL / SQLite) |
+| Auth | Email/password (PBKDF2 + JWT), Google OAuth (PKCE), guest sessions |
+| Media | Image BLOBs in the database, served from `/api/media/:id` |
+| Payments | PayPal subscriptions for the Pro plan |
 
-Copy and paste this massive prompt directly into Lovable. It is highly structured to force the AI to generate the exact database schema, UI components, and role-based logic you need.
+## Features
 
-Role: You are an elite Full-Stack Engineer and UI/UX Expert.
-Task: Build a comprehensive, multi-tenant SaaS Car Rental Marketplace.
-Tech Stack: React, Vite, Tailwind CSS, Shadcn UI, Recharts, Lucide Icons, Supabase (Auth, Database, Storage), and Stripe Connect.
+- **Marketplace**: search and filter cars, car detail pages, date-range booking, reviews.
+- **Owner dashboard**: fleet grid, add/edit cars with image upload, booking requests,
+  free/pro listing limits (3 / 15).
+- **Admin dashboard**: analytics, listing approval, all listings, bookings, users, roles,
+  KYC status, subscriptions, and homepage controls.
+- **Auth**: email/password, Google sign-in, and “Continue as guest”. Guests get a real
+  account and can book; signing in with Google later upgrades the same account in place.
+- **Homepage controls**: add car rows by category (SUVs, Luxury, etc.), reorder, hide, or
+  delete them. The header, hero, category strip, host block, and footer stay fixed.
 
-Core Concept: A peer-to-peer car sharing SaaS where "Owners" list vehicles, "Renters" book them, and "Admins" oversee the platform and collect a commission on every transaction.
+## Local development
 
-1. Database Schema & RLS (Supabase)
+Requires [Bun](https://bun.sh).
 
-Generate the Supabase SQL schema, TypeScript interfaces, and strict Row Level Security (RLS) policies for the following:
-
-users: id (uuid), role (enum: 'admin', 'owner', 'renter'), full_name, avatar_url, kyc_status (enum: 'pending', 'verified', 'rejected'), stripe_account_id.
-
-cars: id, owner_id (ref: users), make, model, year, category (SUV, Sedan, Luxury, Electric), daily_rate, location_lat, location_lng, address, description, features (jsonb), images (text array), is_active, status (enum: 'pending_approval', 'live', 'delisted').
-
-bookings: id, car_id (ref: cars), renter_id (ref: users), start_date, end_date, total_days, platform_fee, owner_payout, total_price, status (enum: 'pending', 'approved', 'active', 'completed', 'cancelled', 'disputed').
-
-reviews: id, booking_id, reviewer_id, reviewee_id, rating (1-5), comment, created_at.
-
-messages: id, sender_id, receiver_id, booking_id, content, read_status, created_at.
-
-2. Super Admin Dashboard (Protected: Admin Only)
-
-Overview Metrics: Use Recharts to show Monthly Recurring Revenue (MRR) from platform fees, Active Users, and Total Bookings.
-
-User Management: A Shadcn Data Table with pagination to view all users, approve/reject KYC documents (driver's licenses), and ban users.
-
-Listing Approvals: A queue of newly added cars requiring Admin approval before going live on the marketplace.
-
-Dispute Resolution: A panel to view flagged bookings and resolve refunds.
-
-3. SaaS Owner/Host Dashboard (Protected: Owner Only)
-
-Performance Analytics: Recharts graphs showing monthly earnings, views on their car listings, and booking conversion rates.
-
-Fleet Management: A grid of their listed cars. Include a multi-step Shadcn Form to add a new car (with drag-and-drop Supabase Storage image uploads for up to 5 images).
-
-Calendar & Pricing: A master Shadcn Calendar to block out unavailable dates and set dynamic weekend pricing.
-
-Booking Requests: A Kanban-style board (Pending, Upcoming, In Progress, Completed) to manage renter requests.
-
-Payouts: A Stripe Connect integration UI showing available balance and next payout date.
-
-4. Renter Dashboard & Experience
-
-Advanced Search & Discovery: A complex search bar on the landing page (Location, Dates). The results page must have a split view: a grid of car cards on the left, and an interactive Map (Leaflet/Mapbox) on the right showing car locations.
-
-Granular Filters: Shadcn sliders for Price, checkboxes for Category, Seats, Transmission, and "Instant Book" vs "Requires Approval".
-
-Car Details Page: A prominent image carousel. Detailed specs, Host profile with their average rating, a date-picker for booking, and a breakdown of costs (Daily Rate x Days + Platform Fee = Total).
-
-My Trips: Dashboard showing "Upcoming", "Past", and "Cancelled" trips. Include a button to "Message Host" and "Leave a Review" for past trips.
-
-5. Essential SaaS Features & UI Directives
-
-In-App Messaging: A real-time chat interface for renters and owners to communicate once a booking is requested.
-
-Checkout Flow: Secure Stripe payment element modal. The payment is authorized upon request and captured only when the owner approves the booking.
-
-Design System: Premium, trustworthy SaaS aesthetic. Deep Navy backgrounds (#0f172a), crisp white cards, and an Emerald Green (#10b981) for primary conversion buttons (Book, Approve, Pay).
-
-Feedback: Extensive use of skeleton loaders for all data fetching. Use Shadcn Toasts for all mutations (e.g., "Message sent", "Booking approved", "Car listed").
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://templatecar.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/b97bbabe-94c7-4421-8acf-0a05841b7d3f).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+```bash
+bun install
+bun --cwd server install
+cp server/.dev.vars.example server/.dev.vars   # fill in the values
 ```
+
+Set at least `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a `TURSO_DATABASE_URL`.
+For Google sign-in also set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and
+`GOOGLE_REDIRECT_URI`; set `ADMIN_EMAILS` to the Google emails that should be admins.
+
+Run the API and the web app:
+
+```bash
+bun run --cwd server dev    # Wrangler on :8787
+bun run dev                 # Vite on :8080, proxies /api to :8787
+```
+
+For a file-backed local API without Wrangler:
+
+```bash
+TURSO_DATABASE_URL=file:./server/.smoke/dev.db bun run server/scripts/serve.ts
+```
+
+Apply the schema and optional demo data:
+
+```bash
+bun run --cwd server apply
+bun run --cwd server seed
+```
+
+The schema is also created automatically on the first API request. The admin account is
+created from `ADMIN_EMAIL` / `ADMIN_PASSWORD` and never overwritten afterward.
+
+## Google sign-in
+
+Add these authorized redirect URIs in the Google Cloud console for the OAuth client:
+
+```
+http://localhost:8080/api/auth/google/callback
+https://<your-domain>/api/auth/google/callback
+```
+
+Set `GOOGLE_REDIRECT_URI` to the matching callback URL. The flow uses PKCE and stores the
+session in an httpOnly cookie; email/password and guest sessions return a Bearer JWT as well.
+
+## Tests
+
+```bash
+bun run test                 # frontend unit tests
+bun run --cwd server test    # API, auth, bookings, admin, PayPal
+bun run scripts/smoke.ts     # end-to-end API smoke (needs the API on :8787)
+bun run lint
+bun run build
+```
+
+## Packaging
+
+```bash
+bun run package:pages
+```
+
+Writes `C:\Users\PC\Desktop\builds\carshare-cloudflare-pages.zip` with `_worker.js`,
+`index.html`, `assets/`, and buyer instructions. The buyer drags the zip into Cloudflare
+Pages → Upload assets and sets the environment variables described in the README inside
+the zip.
+
+## Project structure
+
+```
+server/            Hono API, schema, bootstrap, PayPal, Google OAuth
+src/lib/data/      DataClient interface + HTTP adapter
+src/hooks/         TanStack Query hooks
+src/pages/         Storefront, dashboards, admin, page builder
+scripts/           Smoke test and Cloudflare Pages packaging
+docs/superpowers/  Design specs, implementation plan, QA checklist
+```
+
+## Notes
+
+- PayPal routes return `503 Payments not configured` until the PayPal variables are set.
+- Media uploads are limited to 5 MB and validated by file signature, not just MIME type.
+- Bookings recompute all prices server-side and reject overlapping dates atomically.
+- Listing rows with no live cars render nothing.
+- The public homepage falls back to the default selection when no car rows are configured.
+
+## Deferred
+
+- Normal (Turso-direct, static) build: documented as Phase 2, not implemented.
+- Landing-section create/delete is exposed by the API; the Page Builder currently manages
+  car rows only.
