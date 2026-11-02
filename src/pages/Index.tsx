@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useCars } from '@/hooks/queries/useCars';
+import { usePublicLandingSections } from '@/hooks/useLandingSections';
+import { isCarRow, carRowFilters, carRowSubtitle } from '@/lib/carRows';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowUpRight, MapPin, Car as CarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
-import type { Car as CarRow } from '@/lib/data/types';
+import type { Car as CarRow, LandingSection } from '@/lib/data/types';
 
 const CATEGORIES = [
   { key: 'SUV', label: 'SUV', tag: 'Tout-terrain' },
@@ -139,15 +141,15 @@ function Categories() {
   );
 }
 
-/* ─────────── FEATURED CARS ─────────── */
-function FeaturedCars({ cars }: { cars: CarRow[] }) {
+/* ─────────── CAR ROW ─────────── */
+function CarRowSection({ title, subtitle, cars }: { title: string; subtitle: string; cars: CarRow[] }) {
   return (
     <section className="border-b border-border/70 py-20 lg:py-28">
       <div className="container">
         <div className="flex items-end justify-between mb-14 flex-wrap gap-6">
           <div>
-            <span className="eyebrow">Disponibles</span>
-            <h2 className="font-heading text-3xl md:text-4xl mt-4">Sélection du moment.</h2>
+            <span className="eyebrow">{subtitle}</span>
+            <h2 className="font-heading text-3xl md:text-4xl mt-4">{title}</h2>
           </div>
           <Link to="/search" className="text-[11px] uppercase tracking-[0.22em] font-semibold border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors">
             Tout parcourir
@@ -197,6 +199,19 @@ function FeaturedCars({ cars }: { cars: CarRow[] }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/* ─────────── DYNAMIC CAR ROW ─────────── */
+function DynamicCarRow({ section }: { section: LandingSection }) {
+  const { data: cars = [] } = useCars(carRowFilters(section));
+  if (!cars.length) return null;
+  return (
+    <CarRowSection
+      title={section.title}
+      subtitle={carRowSubtitle(section)}
+      cars={cars}
+    />
   );
 }
 
@@ -292,15 +307,27 @@ function Footer() {
 /* ─────────── PAGE ─────────── */
 const Index = () => {
   const { data: cars = [] } = useCars({ limit: 7 });
+  const { data: sections = [] } = usePublicLandingSections();
   const sorted = [...cars].sort((a, b) => b.daily_rate - a.daily_rate);
   const [featured, ...rest] = sorted;
+  const rows = [...sections]
+    .filter(isCarRow)
+    .sort((a, b) => a.sort_order - b.sort_order);
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <Hero featured={featured || null} />
       <Categories />
-      {rest.length > 0 && <FeaturedCars cars={rest.slice(0, 6)} />}
+      {rows.length > 0
+        ? rows.map((section) => <DynamicCarRow key={section.id} section={section} />)
+        : rest.length > 0 && (
+            <CarRowSection
+              title="Sélection du moment."
+              subtitle="Disponibles"
+              cars={rest.slice(0, 6)}
+            />
+          )}
       <HostCta />
       <Footer />
     </div>

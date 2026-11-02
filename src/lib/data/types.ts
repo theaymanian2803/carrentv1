@@ -211,6 +211,7 @@ export interface DataClient {
   };
   landing: {
     list(): Promise<LandingSection[]>;
+    publicList(): Promise<LandingSection[]>;
     create(input: LandingSectionInput): Promise<LandingSection>;
     update(id: string, input: Partial<LandingSectionInput>): Promise<LandingSection>;
     remove(id: string): Promise<void>;

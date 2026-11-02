@@ -129,6 +129,7 @@ export const apiAdapter: DataClient = {
 
   landing: {
     list: () => apiFetch<LandingSection[]>("/admin/landing-sections"),
+    publicList: () => apiFetch<LandingSection[]>("/landing-sections"),
     create: (input: LandingSectionInput) =>
       apiFetch<LandingSection>("/admin/landing-sections", { method: "POST", body: input }),
     update: (id, input) =>

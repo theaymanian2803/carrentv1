@@ -55,6 +55,9 @@ FIRST RUN
     Guests can book a car and later upgrade by signing in with Google.
   - The storefront is live immediately. Demo cars are not seeded in production;
     use Admin -> "Ajouter une annonce" to add your first listing.
+  - Admin -> "Éditeur de page" adds homepage car rows by category (SUVs, Luxury,
+    etc.), with title, count, order, and visibility. The header, hero, category
+    strip, host block, and footer stay fixed.
   - If you change environment variables later, redeploy the same zip so the
     worker picks them up.
 

@@ -69,9 +69,9 @@ for (const [make, model, year, category, rate, address, description, features, i
 }
 
 const sections = [
-  ["hero", "Trouvez la voiture parfaite", { subtitle: "Location entre particuliers, simple et fiable.", button_text: "Explorer", button_link: "/search" }, 0],
-  ["categories", "Catégories", { items: ["SUV", "Sedan", "Luxury", "Electric"] }, 1],
-  ["products", "Voitures populaires", { limit: 6 }, 2],
+  ["car_row", "Sélection du moment", { category: "all", limit: 6, subtitle: "Disponibles" }, 0],
+  ["car_row", "SUVs", { category: "SUV", limit: 3, subtitle: "Pour la route" }, 1],
+  ["car_row", "Luxe", { category: "Luxury", limit: 3, subtitle: "Prestige" }, 2],
 ] as const;
 
 for (const [type, title, content, order] of sections) {

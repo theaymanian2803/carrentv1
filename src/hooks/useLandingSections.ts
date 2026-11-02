@@ -14,6 +14,29 @@ export function useLandingSections() {
   });
 }
 
+export function usePublicLandingSections() {
+  return useQuery({
+    queryKey: [...QUERY_KEY, 'public'],
+    queryFn: () => data.landing.publicList(),
+  });
+}
+
+export function useCreateSection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: LandingSectionInput) => data.landing.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+  });
+}
+
+export function useDeleteSection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => data.landing.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+  });
+}
+
 export function useUpdateSection() {
   const qc = useQueryClient();
   return useMutation({

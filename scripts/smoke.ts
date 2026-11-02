@@ -181,4 +181,47 @@ const guestBooking = await req("/me/bookings", {
 });
 assert(guestBooking.status === 201, `guest booking ${guestBooking.status}`);
 
+step("admin adds a controllable car row and the public page sees it");
+const section = await req("/admin/landing-sections", {
+  method: "POST",
+  body: {
+    section_type: "car_row",
+    title: "SUVs",
+    content: { category: "SUV", limit: 3, subtitle: "Pour la route" },
+    is_visible: true,
+  },
+  token: admin.token,
+});
+assert(section.status === 201, `create section ${section.status}`);
+const sectionId = (section.body as { id: string }).id;
+
+const publicSections = (await req("/landing-sections")).body as Array<{
+  id: string;
+  title: string;
+  section_type: string;
+}>;
+assert(
+  publicSections.some((item) => item.id === sectionId && item.section_type === "car_row"),
+  "public page missing the new car row"
+);
+
+assert(
+  (await req(`/admin/landing-sections/${sectionId}`, {
+    method: "PUT",
+    body: { title: "SUVs & 4x4", is_visible: false },
+    token: admin.token,
+  })).status === 200,
+  "section update failed"
+);
+const hidden = (await req("/landing-sections")).body as Array<{ id: string }>;
+assert(!hidden.some((item) => item.id === sectionId), "hidden section leaked publicly");
+
+assert(
+  (await req(`/admin/landing-sections/${sectionId}`, {
+    method: "DELETE",
+    token: admin.token,
+  })).status === 204,
+  "section delete failed"
+);
+
 console.log("SMOKE OK");
