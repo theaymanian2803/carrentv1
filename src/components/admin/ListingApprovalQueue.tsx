@@ -1,53 +1,37 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { Check, X, Car, MapPin, Calendar, DollarSign } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
-
-type CarRow = Tables<'cars'>;
+import { useAdminCars, useAdminSetCarStatus } from '@/hooks/queries/useAdmin';
+import type { Car as CarRow } from '@/lib/data/types';
 
 const ListingApprovalQueue = () => {
-  const queryClient = useQueryClient();
+  const { data: allCars = [], isLoading } = useAdminCars();
+  const updateStatus = useAdminSetCarStatus();
 
-  const { data: pendingCars, isLoading } = useQuery({
-    queryKey: ['admin-pending-cars'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cars')
-        .select('*')
-        .eq('status', 'pending_approval')
-        .order('created_at', { ascending: true });
-      if (error) throw error;
-      return data as CarRow[];
-    },
-  });
+  const pendingCars = allCars
+    .filter((car) => car.status === 'pending_approval')
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
 
-  const updateStatus = useMutation({
-    mutationFn: async ({ carId, status }: { carId: string; status: 'live' | 'delisted' }) => {
-      const { error } = await supabase
-        .from('cars')
-        .update({ status })
-        .eq('id', carId);
-      if (error) throw error;
-    },
-    onSuccess: (_, { status }) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-pending-cars'] });
-      toast({
-        title: status === 'live' ? 'Listing approved' : 'Listing rejected',
-        description: status === 'live'
-          ? 'The car is now live and visible to renters.'
-          : 'The listing has been rejected.',
-      });
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    },
-  });
+  const approveOrReject = (carId: string, status: 'live' | 'delisted') => {
+    updateStatus.mutate(
+      { id: carId, status },
+      {
+        onSuccess: () =>
+          toast({
+            title: status === 'live' ? 'Listing approved' : 'Listing rejected',
+            description:
+              status === 'live'
+                ? 'The car is now live and visible to renters.'
+                : 'The listing has been rejected.',
+          }),
+        onError: (error) =>
+          toast({ title: 'Error', description: error.message, variant: 'destructive' }),
+      }
+    );
+  };
 
   if (isLoading) {
     return (
@@ -59,7 +43,7 @@ const ListingApprovalQueue = () => {
     );
   }
 
-  if (!pendingCars?.length) {
+  if (!pendingCars.length) {
     return (
       <Card>
         <CardContent className="p-8 text-center text-muted-foreground">
@@ -80,8 +64,8 @@ const ListingApprovalQueue = () => {
         <PendingCarCard
           key={car.id}
           car={car}
-          onApprove={() => updateStatus.mutate({ carId: car.id, status: 'live' })}
-          onReject={() => updateStatus.mutate({ carId: car.id, status: 'delisted' })}
+          onApprove={() => approveOrReject(car.id, 'live')}
+          onReject={() => approveOrReject(car.id, 'delisted')}
           isUpdating={updateStatus.isPending}
         />
       ))}

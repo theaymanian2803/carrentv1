@@ -9,10 +9,18 @@ import AllListingsTable from '@/components/admin/AllListingsTable';
 import SubscriptionManager from '@/components/admin/SubscriptionManager';
 import UserManagement from '@/components/admin/UserManagement';
 import ActivityAnalytics from '@/components/admin/ActivityAnalytics';
+import { useAdminStats } from '@/hooks/queries/useAdmin';
 import BookingManagement from '@/components/admin/BookingManagement';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { data: stats } = useAdminStats();
+  const metrics = [
+    { title: 'Revenu total', value: '0 $', icon: DollarSign, color: 'text-primary' },
+    { title: 'Utilisateurs actifs', value: String(stats?.engagementMetrics.activeUsers ?? 0), icon: Users, color: 'text-blue-500' },
+    { title: 'Total réservations', value: String(stats?.engagementMetrics.totalBookings ?? 0), icon: Car, color: 'text-amber-500' },
+    { title: 'Litiges ouverts', value: '0', icon: AlertTriangle, color: 'text-destructive' },
+  ];
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -25,12 +33,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            { title: 'Revenu total', value: '0 $', icon: DollarSign, color: 'text-primary' },
-            { title: 'Utilisateurs actifs', value: '0', icon: Users, color: 'text-blue-500' },
-            { title: 'Total réservations', value: '0', icon: Car, color: 'text-amber-500' },
-            { title: 'Litiges ouverts', value: '0', icon: AlertTriangle, color: 'text-destructive' },
-          ].map((m) => (
+          {metrics.map((m) => (
             <Card key={m.title}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">{m.title}</CardTitle>

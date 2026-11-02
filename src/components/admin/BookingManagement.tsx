@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
+import { useAdminBookings, useAdminSetBookingStatus } from '@/hooks/queries/useAdmin';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,16 +19,9 @@ import { Separator } from '@/components/ui/separator';
 import {
   CalendarIcon, CheckCircle2, XCircle, Clock, AlertTriangle, Car, User, Phone, Mail,
 } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
-import type { Database } from '@/integrations/supabase/types';
+import type { OwnerBooking, BookingStatus } from '@/lib/data/types';
 
-type BookingRow = Tables<'bookings'>;
-type BookingStatus = Database['public']['Enums']['booking_status'];
-
-interface BookingWithDetails extends BookingRow {
-  car?: { make: string; model: string; year: number; images: string[] } | null;
-  renter?: { full_name: string | null; avatar_url: string | null } | null;
-}
+type BookingWithDetails = OwnerBooking;
 
 const STATUS_OPTIONS: BookingStatus[] = ['pending', 'approved', 'active', 'completed', 'cancelled', 'disputed'];
 
@@ -42,61 +35,30 @@ const STATUS_CONFIG: Record<BookingStatus, { label: string; color: string; icon:
 };
 
 const BookingManagement = () => {
-  const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: allBookings = [], isLoading: loading } = useAdminBookings();
+  const setStatus = useAdminSetBookingStatus();
+  const bookings = allBookings;
   const [filter, setFilter] = useState<string>('all');
   const [selected, setSelected] = useState<BookingWithDetails | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
 
-  const fetchBookings = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('bookings')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast({ title: 'Failed to load bookings', variant: 'destructive' });
-      setLoading(false);
-      return;
-    }
-
-    // Fetch car & renter details in parallel
-    const enriched: BookingWithDetails[] = await Promise.all(
-      (data || []).map(async (b) => {
-        const [carRes, renterRes] = await Promise.all([
-          supabase.from('cars').select('make, model, year, images').eq('id', b.car_id).single(),
-          supabase.from('profiles').select('full_name, avatar_url').eq('id', b.renter_id).single(),
-        ]);
-        return { ...b, car: carRes.data, renter: renterRes.data };
-      })
-    );
-
-    setBookings(enriched);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchBookings(); }, []);
-
   const updateStatus = async (bookingId: string, newStatus: BookingStatus) => {
     setUpdating(bookingId);
-    const { error } = await supabase
-      .from('bookings')
-      .update({ status: newStatus })
-      .eq('id', bookingId);
-
-    if (error) {
-      toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      await setStatus.mutateAsync({ id: bookingId, status: newStatus });
       toast({ title: `Booking ${newStatus}` });
-      setBookings((prev) =>
-        prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
-      );
       if (selected?.id === bookingId) {
         setSelected((prev) => prev ? { ...prev, status: newStatus } : null);
       }
+    } catch (err) {
+      toast({
+        title: 'Update failed',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdating(null);
     }
-    setUpdating(null);
   };
 
   const filtered = filter === 'all' ? bookings : bookings.filter((b) => b.status === filter);

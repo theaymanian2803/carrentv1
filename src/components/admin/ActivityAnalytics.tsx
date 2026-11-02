@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
 import { Calendar, Users, Car, TrendingUp, Activity } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useAdminStats } from '@/hooks/queries/useAdmin';
 
 interface AnalyticsData {
   userSignups: Array<{ date: string; count: number }>;
@@ -18,7 +17,8 @@ interface AnalyticsData {
 }
 
 const ActivityAnalytics = () => {
-  const [analytics, setAnalytics] = useState<AnalyticsData>({
+  const { data: stats, isLoading: loading } = useAdminStats();
+  const analytics: AnalyticsData = stats ?? {
     userSignups: [],
     bookingsTrend: [],
     userRoles: [],
@@ -26,111 +26,8 @@ const ActivityAnalytics = () => {
       totalUsers: 0,
       activeUsers: 0,
       totalBookings: 0,
-      avgBookingsPerUser: 0
-    }
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchAnalyticsData();
-  }, []);
-
-  const fetchAnalyticsData = async () => {
-    try {
-      // Fetch user signups over time (last 30 days)
-      const signupQuery = await supabase
-        .from('profiles')
-        .select('created_at')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-
-      // Fetch bookings trend (last 30 days)
-      const bookingsQuery = await supabase
-        .from('bookings')
-        .select('created_at')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-
-      // Fetch user roles distribution
-      const rolesQuery = await supabase
-        .from('user_roles')
-        .select('role');
-
-      // Fetch engagement metrics
-      const totalUsersQuery = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact' });
-
-      const totalBookingsQuery = await supabase
-        .from('bookings')
-        .select('id', { count: 'exact' });
-
-      // Active users (users with bookings in last 30 days)
-      const activeUsersQuery = await supabase
-        .from('bookings')
-        .select('renter_id')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-
-      // Process signup data
-      const signupData = signupQuery.data || [];
-      const signupsByDate = signupData.reduce((acc: Record<string, number>, user) => {
-        const date = new Date(user.created_at).toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      }, {});
-
-      const userSignups = Object.entries(signupsByDate)
-        .map(([date, count]) => ({ date, count }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .slice(-30);
-
-      // Process bookings data
-      const bookingData = bookingsQuery.data || [];
-      const bookingsByDate = bookingData.reduce((acc: Record<string, number>, booking) => {
-        const date = new Date(booking.created_at).toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      }, {});
-
-      const bookingsTrend = Object.entries(bookingsByDate)
-        .map(([date, count]) => ({ date, count }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .slice(-30);
-
-      // Process roles data
-      const rolesData = rolesQuery.data || [];
-      const roleColors = { admin: 'hsl(var(--destructive))', owner: 'hsl(var(--primary))', renter: 'hsl(var(--secondary))' };
-      const rolesCounts = rolesData.reduce((acc: Record<string, number>, role) => {
-        acc[role.role] = (acc[role.role] || 0) + 1;
-        return acc;
-      }, {});
-
-      const userRoles = Object.entries(rolesCounts).map(([role, count]) => ({
-        role: role.charAt(0).toUpperCase() + role.slice(1),
-        count,
-        color: roleColors[role as keyof typeof roleColors] || 'hsl(var(--muted))'
-      }));
-
-      // Calculate engagement metrics
-      const totalUsers = totalUsersQuery.count || 0;
-      const totalBookings = totalBookingsQuery.count || 0;
-      const uniqueActiveUsers = new Set(activeUsersQuery.data?.map(b => b.renter_id) || []).size;
-      const avgBookingsPerUser = totalUsers > 0 ? Number((totalBookings / totalUsers).toFixed(2)) : 0;
-
-      setAnalytics({
-        userSignups,
-        bookingsTrend,
-        userRoles,
-        engagementMetrics: {
-          totalUsers,
-          activeUsers: uniqueActiveUsers,
-          totalBookings,
-          avgBookingsPerUser
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching analytics data:', error);
-    } finally {
-      setLoading(false);
-    }
+      avgBookingsPerUser: 0,
+    },
   };
 
   const chartConfig = {
