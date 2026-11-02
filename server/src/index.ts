@@ -3,6 +3,8 @@ import { cors } from "hono/cors";
 import type { AppEnv } from "./env";
 import { ensureBootstrap } from "./bootstrap";
 import { authRoutes } from "./routes/auth";
+import { catalogRoutes } from "./routes/catalog";
+import { mediaRoutes } from "./routes/media";
 
 export type { AppEnv };
 
@@ -22,5 +24,7 @@ app.use("*", async (c, next) => {
 app.get("/health", (c) => c.json({ ok: true }));
 
 authRoutes(app);
+catalogRoutes(app);
+mediaRoutes(app);
 
 export default app;
