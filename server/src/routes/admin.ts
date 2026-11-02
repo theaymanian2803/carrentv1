@@ -7,6 +7,7 @@ import { adminStatsRoutes } from "./admin/stats";
 import { adminCarRoutes } from "./admin/cars";
 import { adminBookingRoutes } from "./admin/bookings";
 import { adminSubscriptionRoutes } from "./admin/subscriptions";
+import { adminLandingRoutes } from "./admin/landing";
 
 export const adminRoutes = (app: Hono<AppEnv>): void => {
   const admin = new Hono<AppEnv>();
@@ -18,6 +19,7 @@ export const adminRoutes = (app: Hono<AppEnv>): void => {
   adminCarRoutes(admin);
   adminBookingRoutes(admin);
   adminSubscriptionRoutes(admin);
+  adminLandingRoutes(admin);
 
   app.route("/admin", admin);
 };
