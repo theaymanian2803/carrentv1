@@ -1,78 +1,43 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
+import { useAdminSetSubscription, useAdminSubscriptions } from '@/hooks/queries/useAdmin';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Crown, Zap } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import type { AdminSubscription } from '@/lib/data/types';
 
-interface SubRow {
-  id: string;
-  user_id: string;
-  plan: 'free' | 'pro';
-  status: string;
-  current_period_end: string | null;
-  paypal_subscription_id: string | null;
+interface SubRow extends AdminSubscription {
   profile: { full_name: string | null } | null;
 }
 
 const SubscriptionManager = () => {
-  const [subs, setSubs] = useState<SubRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: adminSubs = [], isLoading: loading } = useAdminSubscriptions();
+  const setSubscription = useAdminSetSubscription();
   const [updating, setUpdating] = useState<string | null>(null);
 
-  const fetchSubs = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('id, user_id, plan, status, current_period_end, paypal_subscription_id')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error(error);
-      toast({ title: 'Error loading subscriptions', variant: 'destructive' });
-    } else {
-      // Fetch profiles for all user_ids
-      const userIds = (data || []).map((s) => s.user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', userIds);
-
-      const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
-      const mapped = (data || []).map((s) => ({
-        ...s,
-        profile: profileMap.get(s.user_id) || null,
-      }));
-      setSubs(mapped);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchSubs(); }, []);
+  const subs: SubRow[] = adminSubs.map((sub) => ({
+    ...sub,
+    profile: sub.full_name ? { full_name: sub.full_name } : null,
+  }));
 
   const handlePlanChange = async (subId: string, newPlan: 'free' | 'pro') => {
     setUpdating(subId);
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({
-        plan: newPlan,
-        status: 'active',
-        current_period_start: new Date().toISOString(),
-        current_period_end: newPlan === 'pro'
-          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-          : null,
-      })
-      .eq('id', subId);
-
-    if (error) {
-      toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      await setSubscription.mutateAsync({
+        id: subId,
+        input: { plan: newPlan, status: 'active' },
+      });
       toast({ title: `Plan updated to ${newPlan}` });
-      fetchSubs();
+    } catch (err) {
+      toast({
+        title: 'Update failed',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdating(null);
     }
-    setUpdating(null);
   };
 
   const statusColor = (s: string) => {

@@ -145,6 +145,7 @@ export interface AdminUser {
   full_name: string | null;
   avatar_url: string | null;
   kyc_status: string;
+  stripe_account_id: string | null;
   plan: string;
   status: string;
   created_at: string;

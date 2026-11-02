@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAdminUsers } from '@/hooks/queries/useAdmin';
+import { data } from '@/lib/data';
+import { queryKeys } from '@/lib/queryKeys';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,16 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Search, Shield, ShieldCheck, ShieldAlert, UserCheck, UserX, Eye, Mail, Calendar, CreditCard } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
+import type { AdminUser, AppRole, KycStatus } from '@/lib/data/types';
 
-type ProfileRow = Tables<'profiles'>;
-type RoleRow = Tables<'user_roles'>;
-type SubscriptionRow = Tables<'subscriptions'>;
-
-interface UserWithDetails extends ProfileRow {
-  user_roles: Pick<RoleRow, 'role'>[];
-  subscriptions: Pick<SubscriptionRow, 'plan' | 'status'>[];
-}
+type UserWithDetails = AdminUser & {
+  user_roles: { role: AppRole }[];
+  subscriptions: { plan: string; status: string }[];
+};
 
 const kycColors: Record<string, string> = {
   pending: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
@@ -42,33 +40,19 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<UserWithDetails | null>(null);
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: async () => {
-      const [profilesRes, rolesRes, subsRes] = await Promise.all([
-        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-        supabase.from('user_roles').select('user_id, role'),
-        supabase.from('subscriptions').select('user_id, plan, status'),
-      ]);
-      if (profilesRes.error) throw profilesRes.error;
-      return (profilesRes.data ?? []).map((p) => ({
-        ...p,
-        user_roles: (rolesRes.data ?? []).filter((r) => r.user_id === p.id).map((r) => ({ role: r.role })),
-        subscriptions: (subsRes.data ?? []).filter((s) => s.user_id === p.id).map((s) => ({ plan: s.plan, status: s.status })),
-      })) as UserWithDetails[];
-    },
-  });
+  const { data: adminUsers, isLoading } = useAdminUsers();
+  const users: UserWithDetails[] = (adminUsers ?? []).map((u) => ({
+    ...u,
+    user_roles: u.roles.map((role) => ({ role })),
+    subscriptions: [{ plan: u.plan, status: u.status }],
+  }));
 
   const updateKyc = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ kyc_status: status as ProfileRow['kyc_status'] })
-        .eq('id', userId);
-      if (error) throw error;
+      await data.admin.setKyc(userId, status as KycStatus);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users });
       toast({ title: 'KYC status updated' });
     },
     onError: (err: Error) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
@@ -76,13 +60,12 @@ const UserManagement = () => {
 
   const addRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role: role as RoleRow['role'] });
-      if (error) throw error;
+      const user = users.find((u) => u.id === userId);
+      const next = [...(user?.roles ?? []).filter((r) => r !== role), role as AppRole];
+      await data.admin.setRoles(userId, next);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users });
       toast({ title: 'Role added' });
     },
     onError: (err: Error) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
@@ -90,15 +73,12 @@ const UserManagement = () => {
 
   const removeRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId)
-        .eq('role', role as RoleRow['role']);
-      if (error) throw error;
+      const user = users.find((u) => u.id === userId);
+      const next = (user?.roles ?? []).filter((r) => r !== role);
+      await data.admin.setRoles(userId, next);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users });
       toast({ title: 'Role removed' });
     },
     onError: (err: Error) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),

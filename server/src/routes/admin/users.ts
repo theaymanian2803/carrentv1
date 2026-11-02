@@ -19,7 +19,7 @@ export const adminUserRoutes = (app: Hono<AppEnv>): void => {
     const [userRes, roleRes] = await Promise.all([
       d.execute(`
         SELECT u.id, u.email, u.created_at,
-               p.full_name, p.avatar_url, p.kyc_status,
+               p.full_name, p.avatar_url, p.kyc_status, p.stripe_account_id,
                s.plan, s.status AS subscription_status
         FROM users u
         LEFT JOIN profiles p ON p.user_id = u.id
@@ -42,6 +42,10 @@ export const adminUserRoutes = (app: Hono<AppEnv>): void => {
         full_name: row.full_name === null ? null : String(row.full_name),
         avatar_url: row.avatar_url === null ? null : String(row.avatar_url),
         kyc_status: row.kyc_status === null ? "pending" : String(row.kyc_status),
+        stripe_account_id:
+          row.stripe_account_id === null || row.stripe_account_id === undefined
+            ? null
+            : String(row.stripe_account_id),
         plan: row.plan === null ? "free" : String(row.plan),
         status: row.subscription_status === null ? "active" : String(row.subscription_status),
         created_at: String(row.created_at),
