@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ import Navbar from '@/components/Navbar';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { signIn, signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,55 +23,41 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
-    } else if (data.user) {
-      const { data: rolesData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id);
-      
-      const roles = rolesData?.map(r => r.role) || [];
-      
-      if (roles.includes('admin')) {
-        navigate('/admin');
-      } else if (roles.includes('owner')) {
-        navigate('/owner');
-      } else {
-        navigate('/renter');
-      }
-      
+    try {
+      const { roles } = await signIn(email, password);
+      if (roles.includes('admin')) navigate('/admin');
+      else if (roles.includes('owner')) navigate('/owner');
+      else navigate('/renter');
       toast({ title: 'Bon retour !', description: 'Connexion réussie.' });
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err instanceof Error ? err.message : 'Connexion impossible',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName, role },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
-    } else if (data.user) {
-      if (role === 'owner') {
-        navigate('/owner');
-      } else {
-        navigate('/renter');
-      }
-      
-      toast({ 
-        title: 'Compte créé !', 
-        description: 'Bienvenue sur DriveShare. Commencez à explorer maintenant.' 
+    try {
+      await signUp({ email, password, fullName, role });
+      navigate(role === 'owner' ? '/owner' : '/renter');
+      toast({
+        title: 'Compte créé !',
+        description: 'Bienvenue sur DriveShare. Commencez à explorer maintenant.',
       });
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err instanceof Error ? err.message : 'Création du compte impossible',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,7 +108,7 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Mot de passe</Label>
-                    <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                    <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
                   </div>
                   <div className="space-y-2">
                     <Label>Je souhaite</Label>
