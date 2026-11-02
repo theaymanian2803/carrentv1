@@ -37,17 +37,20 @@ async function paypalRequest<T>(env: Env, path: string, init: RequestInit = {}):
 export interface PaypalSubscription {
   id: string;
   status: string;
+  custom_id?: string;
+  plan_id?: string;
   links?: { rel: string; href: string }[];
 }
 
 export async function createPaypalSubscription(
   env: Env,
-  input: { returnUrl: string; cancelUrl: string }
+  input: { returnUrl: string; cancelUrl: string; userId: string }
 ): Promise<PaypalSubscription> {
   return paypalRequest<PaypalSubscription>(env, "/v1/billing/subscriptions", {
     method: "POST",
     body: JSON.stringify({
       plan_id: env.PAYPAL_PLAN_ID,
+      custom_id: input.userId,
       application_context: {
         brand_name: "CarShare Connect",
         user_action: "SUBSCRIBE_NOW",

@@ -36,10 +36,24 @@ export const paymentRoutes = (app: Hono<AppEnv>): void => {
       const subscription = await createPaypalSubscription(c.env, {
         returnUrl: body.return_url,
         cancelUrl: body.cancel_url,
+        userId: c.get("userId"),
       });
       const approval = subscription.links?.find(
         (link) => link.rel === "approve" || link.rel === "payer-action"
       );
+
+      const taken = await db(c.env).execute({
+        sql: "SELECT 1 FROM subscriptions WHERE paypal_subscription_id = ? AND user_id <> ?",
+        args: [subscription.id, c.get("userId")],
+      });
+      if (taken.rows.length) {
+        return c.json({ error: "This subscription is already linked to another account" }, 409);
+      }
+      await db(c.env).execute({
+        sql: "UPDATE subscriptions SET paypal_subscription_id = ?, updated_at = ? WHERE user_id = ?",
+        args: [subscription.id, now(), c.get("userId")],
+      });
+
       return c.json({
         subscription_id: subscription.id,
         approval_url: approval?.href ?? null,
@@ -59,6 +73,20 @@ export const paymentRoutes = (app: Hono<AppEnv>): void => {
       const subscription = await getPaypalSubscription(c.env, body.subscription_id);
       if (subscription.status !== "ACTIVE") {
         return c.json({ error: "Subscription is not active yet" }, 400);
+      }
+      if (!subscription.custom_id || subscription.custom_id !== c.get("userId")) {
+        return c.json({ error: "Subscription does not belong to this account" }, 403);
+      }
+      if (c.env.PAYPAL_PLAN_ID && subscription.plan_id && subscription.plan_id !== c.env.PAYPAL_PLAN_ID) {
+        return c.json({ error: "Subscription plan does not match" }, 400);
+      }
+
+      const taken = await db(c.env).execute({
+        sql: "SELECT 1 FROM subscriptions WHERE paypal_subscription_id = ? AND user_id <> ?",
+        args: [subscription.id, c.get("userId")],
+      });
+      if (taken.rows.length) {
+        return c.json({ error: "This subscription is already linked to another account" }, 409);
       }
 
       const periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -111,14 +139,19 @@ export const paymentRoutes = (app: Hono<AppEnv>): void => {
     const subscriptionId = event.resource?.id;
     const userId = event.resource?.custom_id;
     const dbc = db(c.env);
-    const target = subscriptionId
+    let target = subscriptionId
       ? await dbc.execute({
           sql: "SELECT id FROM subscriptions WHERE paypal_subscription_id = ?",
           args: [subscriptionId],
         })
-      : userId
-        ? await dbc.execute({ sql: "SELECT id FROM subscriptions WHERE user_id = ?", args: [userId] })
-        : { rows: [] };
+      : { rows: [] as never[] };
+
+    if (!target.rows.length && userId) {
+      target = (await dbc.execute({
+        sql: "SELECT id FROM subscriptions WHERE user_id = ?",
+        args: [userId],
+      })) as typeof target;
+    }
 
     if (!target.rows.length) return c.json({ ok: true, ignored: true });
 

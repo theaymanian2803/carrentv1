@@ -16,6 +16,7 @@ export const mediaRoutes = (app: Hono<AppEnv>): void => {
       headers: {
         "Content-Type": String(rows[0].mime),
         "Cache-Control": "public, max-age=31536000, immutable",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   });

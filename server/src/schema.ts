@@ -125,4 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_reviews_booking ON reviews(booking_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_user ON user_roles(user_id);
 CREATE INDEX IF NOT EXISTS idx_landing_sort ON landing_sections(sort_order);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_paypal
+  ON subscriptions(paypal_subscription_id)
+  WHERE paypal_subscription_id IS NOT NULL;
 `;

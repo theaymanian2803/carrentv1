@@ -105,12 +105,19 @@ describe("my cars", () => {
     const ownerId = await seedUser(env, "owner@example.com");
     const headers = await authHeaders(env, ownerId);
 
+    const png = new Uint8Array(2 * 1024 * 1024);
+    png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
     const okForm = new FormData();
-    okForm.append("file", new File([new Uint8Array(2 * 1024 * 1024)], "car.png", { type: "image/png" }));
+    okForm.append("file", new File([png], "car.png", { type: "image/png" }));
     const ok = await call(app, env, "/api/me/upload", { method: "POST", headers, body: okForm });
     expect(ok.status).toBe(201);
     const { url } = (await ok.json()) as any;
     expect(url).toMatch(/^\/api\/media\//);
+
+    const spoofForm = new FormData();
+    spoofForm.append("file", new File(["not an image"], "evil.png", { type: "image/png" }));
+    const spoofed = await call(app, env, "/api/me/upload", { method: "POST", headers, body: spoofForm });
+    expect(spoofed.status).toBe(415);
 
     const textForm = new FormData();
     textForm.append("file", new File(["hello"], "car.txt", { type: "text/plain" }));

@@ -97,10 +97,20 @@ describe("bookings", () => {
         await book(env, renterHeaders, {
           car_id: liveCar,
           start_date: "2026-02-03",
-          end_date: "2026-02-03",
+          end_date: "2026-02-02",
         })
       ).status
     ).toBe(400);
+
+    expect(
+      (
+        await book(env, renterHeaders, {
+          car_id: liveCar,
+          start_date: "2026-02-10",
+          end_date: "2026-02-10",
+        })
+      ).status
+    ).toBe(201);
 
     expect(
       (
@@ -135,6 +145,8 @@ describe("bookings", () => {
       car_id: carId,
       start_date: "2026-03-01",
       end_date: "2026-03-03",
+      renter_phone: "555-0100",
+      renter_email: "renter@example.com",
     });
 
     const asRenter = (await (
@@ -142,12 +154,17 @@ describe("bookings", () => {
     ).json()) as any;
     expect(asRenter.asRenter).toHaveLength(1);
     expect(asRenter.asRenter[0].car.make).toBe("Tesla");
+    expect(asRenter.asRenter[0].renter.email).toBe("renter@example.com");
 
     const asOwner = (await (
       await call(app, env, "/api/me/bookings", { headers: ownerHeaders })
     ).json()) as any;
     expect(asOwner.asOwner).toHaveLength(1);
     expect(asOwner.asOwner[0].renter.full_name).toBe("renter");
+    expect(asOwner.asOwner[0].renter.email).toBeUndefined();
+    expect(asOwner.asOwner[0].renter.phone).toBeUndefined();
+    expect(asOwner.asOwner[0].renter_email).toBeUndefined();
+    expect(asOwner.asOwner[0].renter_phone).toBeUndefined();
   });
 
   it("enforces the status transition matrix", async () => {
@@ -222,5 +239,29 @@ describe("bookings", () => {
         })
       ).status
     ).toBe(200);
+  });
+
+  it("allows only one of two concurrent requests for the same dates", async () => {
+    const env = await makeTestEnv();
+    await resetSchema(env);
+    const ownerId = await seedUser(env, "owner@example.com");
+    const renterId = await seedUser(env, "renter@example.com", "renter");
+    const carId = await seedCar(env, ownerId);
+    const headers = await authHeaders(env, renterId);
+    const payload = {
+      car_id: carId,
+      start_date: "2026-07-01",
+      end_date: "2026-07-04",
+    };
+
+    const results = await Promise.all([book(env, headers, payload), book(env, headers, payload)]);
+    const statuses = results.map((res) => res.status).sort();
+    expect(statuses).toEqual([201, 409]);
+
+    const { rows } = await db(env).execute({
+      sql: "SELECT COUNT(*) AS n FROM bookings",
+      args: [],
+    });
+    expect(Number(rows[0].n)).toBe(1);
   });
 });

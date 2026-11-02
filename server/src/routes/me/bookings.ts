@@ -39,7 +39,7 @@ export const bookingRoutes = (app: Hono<AppEnv>): void => {
       }),
     ]);
     return c.json({
-      asRenter: asRenter.rows.map((row) => mapBooking(row as Row)),
+      asRenter: asRenter.rows.map((row) => mapBooking(row as Row, { includeContact: true })),
       asOwner: asOwner.rows.map((row) => mapBooking(row as Row)),
     });
   });
@@ -62,7 +62,7 @@ export const bookingRoutes = (app: Hono<AppEnv>): void => {
     if (!DATE_RE.test(start_date) || !DATE_RE.test(end_date)) {
       return c.json({ error: "Dates must be YYYY-MM-DD" }, 400);
     }
-    if (end_date <= start_date) return c.json({ error: "end_date must be after start_date" }, 400);
+    if (end_date < start_date) return c.json({ error: "end_date must not be before start_date" }, 400);
 
     const { rows: carRows } = await db(c.env).execute({
       sql: "SELECT id, owner_id, daily_rate, status, is_active FROM cars WHERE id = ?",
@@ -77,25 +77,22 @@ export const bookingRoutes = (app: Hono<AppEnv>): void => {
     const userId = c.get("userId");
     if (String(car.owner_id) === userId) return c.json({ error: "You cannot book your own car" }, 400);
 
-    const overlap = await db(c.env).execute({
-      sql: `SELECT 1 FROM bookings
-            WHERE car_id = ? AND status <> 'cancelled'
-              AND start_date <= ? AND end_date >= ?`,
-      args: [car_id, end_date, start_date],
-    });
-    if (overlap.rows.length) return c.json({ error: "Those dates are already booked" }, 409);
-
     const money = computeBooking({
       dailyRate: Number(car.daily_rate),
       startDate: start_date,
       endDate: end_date,
     });
     const id = crypto.randomUUID();
-    await db(c.env).execute({
+    const inserted = await db(c.env).execute({
       sql: `INSERT INTO bookings (id, car_id, renter_id, start_date, end_date, total_days,
               platform_fee, owner_payout, total_price, status, renter_phone, renter_email, renter_notes,
               created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)`,
+            SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?
+            WHERE NOT EXISTS (
+              SELECT 1 FROM bookings
+              WHERE car_id = ? AND status <> 'cancelled'
+                AND start_date <= ? AND end_date >= ?
+            )`,
       args: [
         id,
         car_id,
@@ -111,8 +108,12 @@ export const bookingRoutes = (app: Hono<AppEnv>): void => {
         body.renter_notes ?? "",
         now(),
         now(),
+        car_id,
+        end_date,
+        start_date,
       ],
     });
+    if (!inserted.rowsAffected) return c.json({ error: "Those dates are already booked" }, 409);
 
     return c.json({ id, ...money, status: "pending" }, 201);
   });

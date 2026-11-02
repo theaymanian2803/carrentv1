@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { AuthProvider, useAuth } from "../AuthContext";
 import { data } from "@/lib/data";
+import { emitAuthFailure } from "@/lib/authEvents";
 
 vi.mock("@/lib/data", () => ({
   data: {
@@ -34,9 +36,18 @@ const profile = {
   updated_at: "2026-01-01",
 };
 
-const wrapper = ({ children }: { children: ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>{children}</AuthProvider>
+  </QueryClientProvider>
+);
 
 beforeEach(() => {
+  queryClient.clear();
   vi.clearAllMocks();
   auth.getToken.mockReturnValue(null);
   auth.me.mockResolvedValue({
@@ -112,5 +123,19 @@ describe("AuthContext", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.hasRole("admin")).toBe(true);
     expect(result.current.hasRole("owner")).toBe(false);
+  });
+
+  it("clears the session and private cache when a request reports 401", async () => {
+    auth.getToken.mockReturnValue("token");
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.user).not.toBeNull());
+
+    queryClient.setQueryData(["bookings"], { secret: true });
+    act(() => emitAuthFailure());
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.roles).toEqual([]);
+    expect(auth.logout).toHaveBeenCalled();
+    expect(queryClient.getQueryData(["bookings"])).toBeUndefined();
   });
 });

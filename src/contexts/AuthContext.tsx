@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { data } from '@/lib/data';
+import { onAuthFailure } from '@/lib/authEvents';
 import type { AuthUser, AppRole, Profile } from '@/lib/data/types';
 
 interface AuthContextType {
@@ -22,6 +24,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
@@ -57,7 +60,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void load();
   }, [load]);
 
+  useEffect(
+    () =>
+      onAuthFailure(() => {
+        data.auth.logout();
+        setUser(null);
+        setProfile(null);
+        setRoles([]);
+        queryClient.clear();
+      }),
+    [queryClient]
+  );
+
   const signIn = async (email: string, password: string) => {
+    queryClient.clear();
     const session = await data.auth.login({ email, password });
     setUser(session.user);
     try {
@@ -83,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fullName: string;
     role: 'owner' | 'renter';
   }) => {
+    queryClient.clear();
     const session = await data.auth.register(input);
     setUser(session.user);
     try {
@@ -107,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setProfile(null);
     setRoles([]);
+    queryClient.clear();
   };
 
   const refresh = async () => {

@@ -6,6 +6,7 @@ import { profileRoutes } from "./me/profile";
 import { carRoutes } from "./me/cars";
 import { bookingRoutes } from "./me/bookings";
 import { reviewRoutes } from "./me/reviews";
+import { sniffImageMime } from "../lib/image";
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
@@ -32,6 +33,9 @@ export const meRoutes = (app: Hono<AppEnv>): void => {
 
     const id = crypto.randomUUID();
     const bytes = new Uint8Array(await upload.arrayBuffer());
+    if (sniffImageMime(bytes) !== upload.type) {
+      return c.json({ error: "File contents do not match the declared image type" }, 415);
+    }
     await db(c.env).execute({
       sql: "INSERT INTO media (id, mime, data, created_at) VALUES (?, ?, ?, ?)",
       args: [id, upload.type, bytes, new Date().toISOString()],

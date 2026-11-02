@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { apiFetch, getToken, setToken, ApiError } from "../api";
+import { onAuthFailure } from "../authEvents";
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -36,6 +37,17 @@ describe("apiFetch", () => {
 
     await expect(apiFetch("/auth/me")).rejects.toBeInstanceOf(ApiError);
     expect(getToken()).toBeNull();
+  });
+
+  it("notifies the app when a 401 invalidates the session", async () => {
+    const listener = vi.fn();
+    const off = onAuthFailure(listener);
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ error: "Unauthorized" }, 401)));
+    setToken("stale");
+
+    await expect(apiFetch("/auth/me")).rejects.toBeInstanceOf(ApiError);
+    expect(listener).toHaveBeenCalledTimes(1);
+    off();
   });
 
   it("turns a non-JSON error body into an ApiError with the status", async () => {

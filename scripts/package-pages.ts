@@ -55,7 +55,8 @@ NOTES
   - The Turso token lives only in the Worker; it is never shipped to the browser.
   - PayPal checkout returns a clear "Payments not configured" message until the
     PayPal variables above are set.
-  - Open /admin and change your admin password after the first deploy (Settings).
+  - Set a strong ADMIN_PASSWORD before deploying; the account is created on the
+    first request.
 
 Questions? Contact the seller.
 `;

@@ -1,6 +1,8 @@
 const BASE = "/api";
 export const TOKEN_KEY = "carshare_token";
 
+import { emitAuthFailure } from "./authEvents";
+
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -53,7 +55,10 @@ export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promis
     body,
   });
 
-  if (res.status === 401) setToken(null);
+  if (res.status === 401) {
+    setToken(null);
+    emitAuthFailure();
+  }
 
   if (!res.ok) {
     let message = res.statusText || `Request failed (${res.status})`;

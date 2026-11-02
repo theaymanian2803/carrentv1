@@ -19,7 +19,7 @@ export const adminBookingRoutes = (app: Hono<AppEnv>): void => {
     const { rows } = await db(c.env).execute(
       `${BOOKING_SELECT} ORDER BY b.created_at DESC`
     );
-    return c.json(rows.map((row) => mapBooking(row as Row)));
+    return c.json(rows.map((row) => mapBooking(row as Row, { includeContact: true })));
   });
 
   app.patch("/bookings/:id/status", async (c) => {

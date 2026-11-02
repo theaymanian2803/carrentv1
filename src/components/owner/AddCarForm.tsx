@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { data } from '@/lib/data';
 import { useSubscription } from '@/hooks/useSubscription';
 import { queryKeys } from '@/lib/queryKeys';
+import { canCreateListing } from '@/lib/listingLimit';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,8 +141,9 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
   const handleSubmit = async () => {
     if (!user) return;
     setSubmitting(true);
+    const isAdminLive = defaultStatus === 'live' && hasRole('admin');
 
-    if (listingCount >= listingLimit) {
+    if (!canCreateListing({ isAdminLive, listingCount, listingLimit })) {
       setSubmitting(false);
       toast({
         title: 'Listing limit reached',
@@ -170,7 +172,7 @@ const AddCarForm = ({ backPath = '/owner', defaultStatus = 'pending_approval' }:
     };
 
     try {
-      if (defaultStatus === 'live' && hasRole('admin')) {
+      if (isAdminLive) {
         await data.admin.createCar({ ...input, owner_id: user.id, status: 'live' });
       } else {
         await data.cars.create(input);

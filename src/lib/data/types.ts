@@ -88,18 +88,22 @@ export interface BookingInput {
   renter_notes?: string;
 }
 
-export interface RenterBooking extends Booking {
-  car: CarSummary;
-  renter: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-    email: string | null;
-    phone: string | null;
-  };
+export interface BookingRenter {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  email?: string | null;
+  phone?: string | null;
 }
 
-export type OwnerBooking = RenterBooking;
+export interface OwnerBooking extends Booking {
+  car: CarSummary;
+  renter: BookingRenter;
+}
+
+export interface RenterBooking extends OwnerBooking {
+  renter: BookingRenter & { email: string | null; phone: string | null };
+}
 
 export interface SubscriptionInfo {
   plan: "free" | "pro";
