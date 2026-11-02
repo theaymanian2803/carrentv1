@@ -4,6 +4,7 @@ import { db } from "../db";
 import { requireAuth } from "../auth";
 import { profileRoutes } from "./me/profile";
 import { carRoutes } from "./me/cars";
+import { bookingRoutes } from "./me/bookings";
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
@@ -14,6 +15,7 @@ export const meRoutes = (app: Hono<AppEnv>): void => {
 
   profileRoutes(me);
   carRoutes(me);
+  bookingRoutes(me);
 
   me.post("/upload", async (c) => {
     const body = await c.req.parseBody();
