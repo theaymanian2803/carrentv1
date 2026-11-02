@@ -27,7 +27,7 @@ const fadeUp = {
 function Hero({ featured }: { featured: CarRow | null }) {
   return (
     <section className="border-b border-border/70">
-      <div className="container grid lg:grid-cols-12 gap-12 lg:gap-16 pt-16 lg:pt-24 pb-20 lg:pb-28 items-end">
+      <div className="container grid lg:grid-cols-12 gap-12 lg:gap-16 pt-16 lg:pt-24 pb-20 lg:pb-28 items-center">
         <motion.div
           className="lg:col-span-6 space-y-8"
           initial="hidden" animate="visible" variants={fadeUp}
