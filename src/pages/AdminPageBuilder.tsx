@@ -24,6 +24,16 @@ import {
 } from '@/hooks/useLandingSections';
 import { carRowFilters, isCarRow, ROW_CATEGORIES, type RowCategory } from '@/lib/carRows';
 import { heroContent, isHero, HERO_DEFAULTS, type HeroContent } from '@/lib/hero';
+import {
+  bannerSettings,
+  BANNER_ALIGNS,
+  BANNER_LAYOUTS,
+  BANNER_LAYOUT_LABELS,
+  BANNER_OVERLAYS,
+  type BannerAlign,
+  type BannerLayout,
+  type BannerOverlay,
+} from '@/lib/banners';
 import type { LandingSection } from '@/lib/data/types';
 import {
   ArrowDown,
@@ -58,20 +68,27 @@ interface Draft {
   image_url: string;
   cta: string;
   cta_link: string;
+  layout: BannerLayout;
+  text_align: BannerAlign;
+  overlay: BannerOverlay;
 }
 
 const toDraft = (section: LandingSection): Draft => {
   const content = section.content as Record<string, unknown>;
+  const banner = bannerSettings(section);
   return {
     title: section.title,
     subtitle: String(content.subtitle ?? ''),
     category: (content.category as RowCategory) ?? 'all',
     limit: carRowFilters(section).limit ?? 3,
-    heading: String(content.heading ?? ''),
-    description: String(content.description ?? ''),
-    image_url: String(content.image_url ?? ''),
-    cta: String(content.cta ?? ''),
-    cta_link: String(content.cta_link ?? ''),
+    heading: banner.heading,
+    description: banner.description,
+    image_url: banner.image_url,
+    cta: banner.cta,
+    cta_link: banner.cta_link,
+    layout: banner.layout,
+    text_align: banner.text_align,
+    overlay: banner.overlay,
   };
 };
 
@@ -98,6 +115,9 @@ const AdminPageBuilder = () => {
   const [newDescription, setNewDescription] = useState('');
   const [newImage, setNewImage] = useState('');
   const [newCta, setNewCta] = useState('');
+  const [newLayout, setNewLayout] = useState<BannerLayout>('split');
+  const [newAlign, setNewAlign] = useState<BannerAlign>('left');
+  const [newOverlay, setNewOverlay] = useState<BannerOverlay>('dark');
 
   const all = sections ?? [];
   const hero = all.find(isHero);
@@ -177,6 +197,9 @@ const AdminPageBuilder = () => {
           image_url: draft.image_url,
           cta: draft.cta,
           cta_link: draft.cta_link,
+          layout: draft.layout,
+          text_align: draft.text_align,
+          overlay: draft.overlay,
         };
     updateSection.mutate(
       { id: section.id, title: draft.title, content },
@@ -219,6 +242,9 @@ const AdminPageBuilder = () => {
             image_url: newImage,
             cta: newCta,
             cta_link: '/search',
+            layout: newLayout,
+            text_align: newAlign,
+            overlay: newOverlay,
           };
 
     createSection.mutate(
@@ -342,7 +368,7 @@ const AdminPageBuilder = () => {
                         <CardTitle className="text-base">{section.title}</CardTitle>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {banner
-                            ? 'Bannière'
+                            ? `Bannière · ${BANNER_LAYOUT_LABELS[draft.layout]}`
                             : `${CATEGORY_LABELS[draft.category]} · ${draft.limit} voiture${draft.limit > 1 ? 's' : ''}`}
                         </p>
                       </div>
@@ -376,6 +402,41 @@ const AdminPageBuilder = () => {
                                 <Field label="Image (URL)" value={draft.image_url} onChange={(v) => setDraft(section, { image_url: v })} placeholder="https://…" />
                                 <Field label="Bouton" value={draft.cta} onChange={(v) => setDraft(section, { cta: v })} />
                                 <Field label="Lien du bouton" value={draft.cta_link} onChange={(v) => setDraft(section, { cta_link: v })} />
+                              </div>
+                              <div className="grid sm:grid-cols-3 gap-4">
+                                <div className="grid gap-1.5">
+                                  <Label>Disposition</Label>
+                                  <Select value={draft.layout} onValueChange={(value) => setDraft(section, { layout: value as BannerLayout })}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      {BANNER_LAYOUTS.map((layout) => (
+                                        <SelectItem key={layout} value={layout}>{BANNER_LAYOUT_LABELS[layout]}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="grid gap-1.5">
+                                  <Label>Alignement du texte</Label>
+                                  <Select value={draft.text_align} onValueChange={(value) => setDraft(section, { text_align: value as BannerAlign })}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      {BANNER_ALIGNS.map((align) => (
+                                        <SelectItem key={align} value={align}>{align === 'center' ? 'Centré' : 'À gauche'}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="grid gap-1.5">
+                                  <Label>Voile sur l’image</Label>
+                                  <Select value={draft.overlay} onValueChange={(value) => setDraft(section, { overlay: value as BannerOverlay })}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      {BANNER_OVERLAYS.map((overlay) => (
+                                        <SelectItem key={overlay} value={overlay}>{overlay === 'dark' ? 'Sombre' : 'Clair'}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </div>
                             </>
                           ) : (
@@ -472,6 +533,41 @@ const AdminPageBuilder = () => {
                       <div className="grid sm:grid-cols-2 gap-4">
                         <Field label="Bouton" value={newCta} onChange={setNewCta} />
                         <Field label="Image (URL)" value={newImage} onChange={setNewImage} placeholder="https://…" />
+                      </div>
+                      <div className="grid sm:grid-cols-3 gap-4">
+                        <div className="grid gap-1.5">
+                          <Label>Disposition</Label>
+                          <Select value={newLayout} onValueChange={(value) => setNewLayout(value as BannerLayout)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {BANNER_LAYOUTS.map((layout) => (
+                                <SelectItem key={layout} value={layout}>{BANNER_LAYOUT_LABELS[layout]}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label>Alignement du texte</Label>
+                          <Select value={newAlign} onValueChange={(value) => setNewAlign(value as BannerAlign)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {BANNER_ALIGNS.map((align) => (
+                                <SelectItem key={align} value={align}>{align === 'center' ? 'Centré' : 'À gauche'}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label>Voile sur l’image</Label>
+                          <Select value={newOverlay} onValueChange={(value) => setNewOverlay(value as BannerOverlay)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {BANNER_OVERLAYS.map((overlay) => (
+                                <SelectItem key={overlay} value={overlay}>{overlay === 'dark' ? 'Sombre' : 'Clair'}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
                   )}

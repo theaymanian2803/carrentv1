@@ -3,6 +3,7 @@ import { useCars } from '@/hooks/queries/useCars';
 import { usePublicLandingSections } from '@/hooks/useLandingSections';
 import { isCarRow, carRowFilters, carRowSubtitle } from '@/lib/carRows';
 import { heroContent, isHero, type HeroContent } from '@/lib/hero';
+import { bannerSettings } from '@/lib/banners';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowUpRight, MapPin, Car as CarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -225,30 +226,95 @@ function DynamicCarRow({ section }: { section: LandingSection }) {
 
 /* ─────────── BANNER ─────────── */
 function BannerSection({ section }: { section: LandingSection }) {
-  const content = section.content as Record<string, string | undefined>;
-  const heading = content.heading || section.title;
+  const banner = bannerSettings(section);
+  const { layout, image_url: imageUrl, text_align: align, overlay } = banner;
 
+  if (!banner.heading && !imageUrl && !banner.description) return null;
+
+  const cta = banner.cta ? (
+    <Link to={banner.cta_link}>
+      <Button className={`h-11 px-7 rounded-none text-[11px] uppercase tracking-[0.22em] gap-2 ${
+        layout === 'full' && overlay === 'dark' ? 'bg-background text-foreground hover:bg-background/90' : ''
+      }`}>
+        {banner.cta} <ArrowRight className="h-4 w-4" />
+      </Button>
+    </Link>
+  ) : null;
+
+  const copy = (centered = false) => (
+    <div className={centered || align === 'center' ? 'text-center mx-auto max-w-2xl' : ''}>
+      {banner.subtitle && <span className="eyebrow">{banner.subtitle}</span>}
+      <h2 className="font-heading text-3xl md:text-4xl mt-4">{banner.heading}</h2>
+      {banner.description && (
+        <p className={`mt-4 text-muted-foreground leading-relaxed ${align === 'center' ? 'mx-auto' : ''} max-w-xl`}>
+          {banner.description}
+        </p>
+      )}
+      {cta && <div className="mt-6">{cta}</div>}
+    </div>
+  );
+
+  if (layout === 'full') {
+    const dark = overlay === 'dark';
+    return (
+      <section className="relative border-b border-border/70 overflow-hidden">
+        {imageUrl ? (
+          <img src={imageUrl} alt={banner.heading} className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-foreground" />
+        )}
+        <div className={`absolute inset-0 ${dark ? 'bg-black/55' : 'bg-white/70'}`} />
+        <div className={`container relative z-10 py-24 lg:py-32 ${dark ? 'text-background' : 'text-foreground'}`}>
+          <div className={align === 'center' ? 'text-center mx-auto max-w-2xl' : 'max-w-2xl'}>
+            {banner.subtitle && (
+              <span className={`eyebrow ${dark ? '!text-accent' : ''}`}>{banner.subtitle}</span>
+            )}
+            <h2 className="font-heading text-4xl md:text-5xl mt-4">{banner.heading}</h2>
+            {banner.description && (
+              <p className={`mt-4 leading-relaxed max-w-xl ${align === 'center' ? 'mx-auto' : ''} ${
+                dark ? 'text-background/75' : 'text-muted-foreground'
+              }`}>
+                {banner.description}
+              </p>
+            )}
+            {cta && <div className="mt-7">{cta}</div>}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (layout === 'compact') {
+    return (
+      <section className="border-b border-border/70 bg-muted/30">
+        <div className="container flex flex-col sm:flex-row items-center gap-6 py-8">
+          {imageUrl && (
+            <img src={imageUrl} alt={banner.heading} className="h-24 w-full sm:w-40 object-cover shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            {banner.subtitle && <span className="eyebrow">{banner.subtitle}</span>}
+            <h2 className="font-heading text-2xl mt-2">{banner.heading}</h2>
+            {banner.description && (
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{banner.description}</p>
+            )}
+          </div>
+          {cta && <div className="shrink-0">{cta}</div>}
+        </div>
+      </section>
+    );
+  }
+
+  const reverse = layout === 'split-reverse';
   return (
     <section className="border-b border-border/70 py-20 lg:py-28">
       <div className="container grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {content.image_url && (
-          <div className="aspect-[4/3] overflow-hidden bg-muted">
-            <img src={content.image_url} alt={heading} className="w-full h-full object-cover" />
+        {imageUrl && (
+          <div className={`aspect-[4/3] overflow-hidden bg-muted ${reverse ? 'md:order-2' : ''}`}>
+            <img src={imageUrl} alt={banner.heading} className="w-full h-full object-cover" />
           </div>
         )}
-        <div className={content.image_url ? '' : 'md:col-span-2 max-w-2xl'}>
-          {content.subtitle && <span className="eyebrow">{content.subtitle}</span>}
-          <h2 className="font-heading text-3xl md:text-4xl mt-4">{heading}</h2>
-          {content.description && (
-            <p className="mt-4 text-muted-foreground leading-relaxed max-w-xl">{content.description}</p>
-          )}
-          {content.cta && (
-            <Link to={content.cta_link || '/search'}>
-              <Button className="mt-6 h-11 px-7 rounded-none text-[11px] uppercase tracking-[0.22em] gap-2">
-                {content.cta} <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          )}
+        <div className={`${imageUrl ? '' : 'md:col-span-2'} ${reverse ? 'md:order-1' : ''}`}>
+          {copy(align === 'center')}
         </div>
       </div>
     </section>

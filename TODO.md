@@ -34,7 +34,8 @@ the sale-readiness work around them.
 
 Landing page (beyond the current car rows):
 - [x] Editable **hero**: eyebrow, heading lines, description, primary/secondary CTA, image
-- [x] Optional **banner/promo** section (image, title, subtitle, CTA, visibility, order)
+- [x] Optional **banner/promo** section with four layouts (split, reversed, full-width
+      overlay, compact), text alignment, overlay strength, CTA, visibility, and order
 - [ ] Optional **text/feature** section (heading, body, 2–4 feature cards)
 - [ ] Optional **testimonials/FAQ** section
 - [ ] Category strip controls (labels/order/visibility) — decide whether it stays fixed
