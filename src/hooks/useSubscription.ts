@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { data } from "@/lib/data";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface SubscriptionInfo {
-  plan: 'free' | 'pro';
+  plan: "free" | "pro";
   status: string;
   listingCount: number;
   listingLimit: number;
@@ -14,42 +15,25 @@ export interface SubscriptionInfo {
 
 export const useSubscription = (): SubscriptionInfo => {
   const { user } = useAuth();
-  const [plan, setPlan] = useState<'free' | 'pro'>('free');
-  const [status, setStatus] = useState('active');
-  const [listingCount, setListingCount] = useState(0);
-  const [listingLimit, setListingLimit] = useState(3);
-  const [loading, setLoading] = useState(true);
+  const query = useQuery({
+    queryKey: queryKeys.subscription,
+    queryFn: () => data.subscriptions.info(),
+    enabled: Boolean(user),
+  });
 
-  const fetchData = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    const [subRes, limitRes, countRes] = await Promise.all([
-      supabase.from('subscriptions').select('plan, status').eq('user_id', user.id).maybeSingle(),
-      supabase.rpc('get_listing_limit', { _user_id: user.id }),
-      supabase.rpc('get_listing_count', { _user_id: user.id }),
-    ]);
-
-    if (subRes.data) {
-      setPlan(subRes.data.plan as 'free' | 'pro');
-      setStatus(subRes.data.status);
-    }
-    if (limitRes.data !== null) setListingLimit(limitRes.data as number);
-    if (countRes.data !== null) setListingCount(countRes.data as number);
-    setLoading(false);
+  const info = query.data ?? {
+    plan: "free" as const,
+    status: "active",
+    listingCount: 0,
+    listingLimit: 3,
   };
 
-  useEffect(() => { fetchData(); }, [user]);
-
   return {
-    plan,
-    status,
-    listingCount,
-    listingLimit,
-    canListMore: listingCount < listingLimit,
-    loading,
-    refetch: fetchData,
+    ...info,
+    canListMore: info.listingCount < info.listingLimit,
+    loading: query.isLoading,
+    refetch: async () => {
+      await query.refetch();
+    },
   };
 };

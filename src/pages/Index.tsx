@@ -1,13 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useCars } from '@/hooks/queries/useCars';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowUpRight, MapPin, Car as CarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
-import type { Tables } from '@/integrations/supabase/types';
-
-type CarRow = Tables<'cars'>;
+import type { Car as CarRow } from '@/lib/data/types';
 
 const CATEGORIES = [
   { key: 'SUV', label: 'SUV', tag: 'Tout-terrain' },
@@ -294,19 +291,9 @@ function Footer() {
 
 /* ─────────── PAGE ─────────── */
 const Index = () => {
-  const [cars, setCars] = useState<CarRow[]>([]);
-
-  useEffect(() => {
-    supabase.from('cars')
-      .select('*')
-      .eq('status', 'live')
-      .eq('is_active', true)
-      .order('daily_rate', { ascending: false })
-      .limit(7)
-      .then(({ data }) => setCars(data || []));
-  }, []);
-
-  const [featured, ...rest] = cars;
+  const { data: cars = [] } = useCars({ limit: 7 });
+  const sorted = [...cars].sort((a, b) => b.daily_rate - a.daily_rate);
+  const [featured, ...rest] = sorted;
 
   return (
     <div className="min-h-screen bg-background">

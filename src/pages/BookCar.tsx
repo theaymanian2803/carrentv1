@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useCar } from '@/hooks/queries/useCars';
+import { useCreateBooking } from '@/hooks/queries/useBookings';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
@@ -19,11 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Tables } from '@/integrations/supabase/types';
 import type { DateRange } from 'react-day-picker';
-
-type CarRow = Tables<'cars'>;
-type ProfileRow = Tables<'profiles'>;
 
 const PLATFORM_FEE_RATE = 0;
 const TIME_SLOTS = [
@@ -41,12 +38,10 @@ const STEPS = [
 const BookCar = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
-  const [car, setCar] = useState<CarRow | null>(null);
-  const [owner, setOwner] = useState<ProfileRow | null>(null);
-  const [ownerRating, setOwnerRating] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: car, isLoading: loading } = useCar(id);
+  const createBooking = useCreateBooking();
 
   const [step, setStep] = useState(0);
   
@@ -81,39 +76,20 @@ const BookCar = () => {
   const canSubmit = canStep0 && canStep1 && agreeTerms;
 
   useEffect(() => {
-    if (!user) { navigate('/auth'); return; }
-    if (!id) return;
+    if (!user) navigate('/auth');
+  }, [user, navigate]);
 
-    const load = async () => {
-      setLoading(true);
-      const { data: carData, error } = await supabase
-        .from('cars').select('*').eq('id', id).single();
+  useEffect(() => {
+    if (!loading && !car) {
+      toast({ title: 'Voiture introuvable', variant: 'destructive' });
+      navigate('/search');
+    }
+  }, [loading, car, navigate]);
 
-      if (error || !carData) {
-        toast({ title: 'Voiture introuvable', variant: 'destructive' });
-        navigate('/search');
-        return;
-      }
-      setCar(carData);
-
-      const [profileRes, ratingRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', carData.owner_id).single(),
-        supabase.from('reviews').select('rating').eq('reviewee_id', carData.owner_id),
-      ]);
-
-      if (profileRes.data) setOwner(profileRes.data);
-      const { data: myProfile } = await supabase.from('profiles').select('full_name').eq('id', user!.id).single();
-      if (myProfile?.full_name) setFullName(myProfile.full_name);
-      if (user?.email) setEmail(user.email);
-      
-      if (ratingRes.data && ratingRes.data.length > 0) {
-        const avg = ratingRes.data.reduce((s, r) => s + r.rating, 0) / ratingRes.data.length;
-        setOwnerRating(Math.round(avg * 10) / 10);
-      }
-      setLoading(false);
-    };
-    load();
-  }, [id, user]);
+  useEffect(() => {
+    if (profile?.full_name) setFullName(profile.full_name);
+    if (user?.email) setEmail(user.email);
+  }, [profile, user]);
 
   const goNext = () => { setStep((s) => Math.min(s + 1, 2)); };
   const goBack = () => { setStep((s) => Math.max(s - 1, 0)); };
@@ -122,27 +98,26 @@ const BookCar = () => {
     if (!user || !car || !dateRange?.from || !dateRange?.to || !canSubmit) return;
     setSubmitting(true);
 
-    const { error } = await supabase.from('bookings').insert({
-      car_id: car.id,
-      renter_id: user.id,
-      start_date: format(dateRange.from, 'yyyy-MM-dd'),
-      end_date: format(dateRange.to, 'yyyy-MM-dd'),
-      total_days: totalDays,
-      platform_fee: platformFee,
-      owner_payout: ownerPayout,
-      total_price: totalPrice,
-      renter_phone: phone,
-      renter_email: email,
-      renter_notes: notes,
-    } as any);
-
-    if (error) {
-      toast({ title: 'Échec de la réservation', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      await createBooking.mutateAsync({
+        car_id: car.id,
+        start_date: format(dateRange.from, 'yyyy-MM-dd'),
+        end_date: format(dateRange.to, 'yyyy-MM-dd'),
+        renter_phone: phone,
+        renter_email: email,
+        renter_notes: notes,
+      });
       toast({ title: 'Réservation envoyée !', description: 'L\'hôte examinera votre demande sous peu.' });
       navigate('/renter');
+    } catch (err) {
+      toast({
+        title: 'Échec de la réservation',
+        description: err instanceof Error ? err.message : 'Réessayez plus tard.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   if (loading) {
@@ -394,20 +369,21 @@ const BookCar = () => {
                     </div>
                   </div>
 
-                  {owner && (
+                  {car.owner && (
                     <div className="flex items-center gap-3 pt-2 border-t border-border">
                       <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                        {owner.full_name?.[0]?.toUpperCase() || '?'}
+                        {car.owner.full_name?.[0]?.toUpperCase() || '?'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{owner.full_name || 'Hôte'}</p>
+                        <p className="text-sm font-medium truncate">{car.owner.full_name || 'Hôte'}</p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {ownerRating !== null && (
+                          {car.owner.review_count > 0 && (
                             <span className="flex items-center gap-0.5">
-                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {ownerRating}
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />{' '}
+                              {Math.round(car.owner.rating_avg * 10) / 10}
                             </span>
                           )}
-                          {owner.kyc_status === 'verified' && (
+                          {car.owner.kyc_status === 'verified' && (
                             <span className="flex items-center gap-0.5 text-primary">
                               <Shield className="h-3 w-3" /> Vérifié
                             </span>

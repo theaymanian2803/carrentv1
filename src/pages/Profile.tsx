@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useUpdateProfile } from '@/hooks/queries/useProfile';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,8 @@ import { toast } from '@/hooks/use-toast';
 import { User, Mail, Shield, Calendar } from 'lucide-react';
 
 const Profile = () => {
-  const { user, profile, roles } = useAuth();
+  const { user, profile, roles, refresh } = useAuth();
+  const updateProfile = useUpdateProfile();
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
@@ -22,18 +23,18 @@ const Profile = () => {
     if (!user) return;
 
     setLoading(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: fullName, avatar_url: avatarUrl })
-      .eq('id', user.id);
-
-    setLoading(false);
-
-    if (error) {
-      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      await updateProfile.mutateAsync({ full_name: fullName, avatar_url: avatarUrl });
+      await refresh();
       toast({ title: 'Succès', description: 'Profil mis à jour avec succès !' });
-      window.location.reload();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err instanceof Error ? err.message : 'Mise à jour impossible',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 

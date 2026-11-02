@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useCars } from '@/hooks/queries/useCars';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,46 +10,29 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search as SearchIcon, MapPin, Calendar, Car, DollarSign, Star } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
-
-type CarRow = Tables<'cars'>;
+import type { CarFilters } from '@/lib/data/types';
 
 const CATEGORIES = ['SUV', 'Sedan', 'Luxury', 'Electric'];
 const CAT_LABELS: Record<string, string> = { SUV: 'SUV', Sedan: 'Berline', Luxury: 'Luxe', Electric: 'Électrique' };
 
 const Search = () => {
   const [searchParams] = useSearchParams();
-  const [cars, setCars] = useState<CarRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<CarFilters>({ maxPrice: 500 });
+  const { data: allCars = [], isLoading: loading, refetch } = useCars(filters);
   const [location, setLocation] = useState('');
   const [maxPrice, setMaxPrice] = useState(500);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     searchParams.get('category') ? [searchParams.get('category')!] : []
   );
 
-  const fetchCars = async () => {
-    setLoading(true);
-    let query = supabase
-      .from('cars')
-      .select('*')
-      .eq('status', 'live')
-      .eq('is_active', true)
-      .lte('daily_rate', maxPrice)
-      .order('created_at', { ascending: false });
+  const cars = allCars.filter(
+    (car) => selectedCategories.length === 0 || selectedCategories.includes(car.category)
+  );
 
-    if (selectedCategories.length > 0) {
-      query = query.in('category', selectedCategories as ("SUV" | "Sedan" | "Luxury" | "Electric")[]);
-    }
-    if (location.trim()) {
-      query = query.ilike('address', `%${location.trim()}%`);
-    }
-
-    const { data } = await query;
-    setCars(data || []);
-    setLoading(false);
+  const applyFilters = () => {
+    setFilters({ maxPrice, q: location.trim() || undefined });
+    void refetch();
   };
-
-  useEffect(() => { fetchCars(); }, []);
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
@@ -74,7 +57,7 @@ const Search = () => {
                   onChange={(e) => setLocation(e.target.value)}
                 />
               </div>
-              <Button onClick={fetchCars} className="gap-2">
+              <Button onClick={applyFilters} className="gap-2">
                 <SearchIcon className="h-4 w-4" /> Rechercher
               </Button>
             </div>
@@ -111,7 +94,7 @@ const Search = () => {
               </div>
             </div>
 
-            <Button onClick={fetchCars} variant="secondary" className="w-full">
+            <Button onClick={applyFilters} variant="secondary" className="w-full">
               Appliquer les filtres
             </Button>
           </div>

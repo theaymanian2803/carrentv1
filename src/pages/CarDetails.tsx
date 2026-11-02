@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useCar } from '@/hooks/queries/useCars';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
@@ -14,57 +14,21 @@ import {
   Car as CarIcon, Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Tables } from '@/integrations/supabase/types';
-
-type CarRow = Tables<'cars'>;
-type ProfileRow = Tables<'profiles'>;
 
 const CarDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [car, setCar] = useState<CarRow | null>(null);
-  const [owner, setOwner] = useState<ProfileRow | null>(null);
-  const [ownerRating, setOwnerRating] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: car, isLoading: loading } = useCar(id);
   const [imageIndex, setImageIndex] = useState(0);
 
   useEffect(() => {
-    const fetchCar = async () => {
-      if (!id) return;
-      setLoading(true);
-
-      const { data: carData, error } = await supabase
-        .from('cars')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error || !carData) {
-        toast({ title: 'Voiture introuvable', variant: 'destructive' });
-        navigate('/search');
-        return;
-      }
-
-      setCar(carData);
-
-      const [profileRes, ratingRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', carData.owner_id).single(),
-        supabase.from('reviews').select('rating').eq('reviewee_id', carData.owner_id),
-      ]);
-
-      if (profileRes.data) setOwner(profileRes.data);
-      if (ratingRes.data && ratingRes.data.length > 0) {
-        const avg = ratingRes.data.reduce((s, r) => s + r.rating, 0) / ratingRes.data.length;
-        setOwnerRating(Math.round(avg * 10) / 10);
-      }
-
-      setLoading(false);
-    };
-
-    fetchCar();
-  }, [id]);
+    if (!loading && !car) {
+      toast({ title: 'Voiture introuvable', variant: 'destructive' });
+      navigate('/search');
+    }
+  }, [loading, car, navigate]);
 
   if (loading) {
     return (
@@ -196,20 +160,20 @@ const CarDetails = () => {
               <h2 className="font-semibold text-lg mb-3">Votre hôte</h2>
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                  {owner?.full_name?.[0]?.toUpperCase() || '?'}
+                  {car.owner.full_name?.[0]?.toUpperCase() || '?'}
                 </div>
                 <div>
-                  <p className="font-medium">{owner?.full_name || 'Hôte'}</p>
+                  <p className="font-medium">{car.owner.full_name || 'Hôte'}</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {ownerRating !== null ? (
+                    {car.owner.review_count > 0 ? (
                       <span className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                        {ownerRating}
+                        {Math.round(car.owner.rating_avg * 10) / 10}
                       </span>
                     ) : (
                       <span>Nouvel hôte</span>
                     )}
-                    {owner?.kyc_status === 'verified' && (
+                    {car.owner.kyc_status === 'verified' && (
                       <Badge variant="outline" className="text-xs gap-1">
                         <Shield className="h-3 w-3" /> Vérifié
                       </Badge>
