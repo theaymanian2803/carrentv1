@@ -20,5 +20,7 @@ LICENSE_PUBLIC_KEY={"crv":"Ed25519","kty":"OKP","x":"6-hrZAstyAp9_-Dw2TonOYIVUQe
 LICENSE_PRODUCT=carshare
 # Set to 1 only for local development to bypass the admin write gate
 LICENSE_DISABLED=
+# Optional: hosted issuance server (license/ Worker). Empty = offline signed keys.
+LICENSE_SERVER_URL=
 # Optional: restrict CORS to your deployed origin (defaults to request origin)
 APP_ORIGIN=

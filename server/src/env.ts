@@ -17,6 +17,7 @@ export type Env = {
   LICENSE_PUBLIC_KEY?: string;
   LICENSE_PRODUCT?: string;
   LICENSE_DISABLED?: string;
+  LICENSE_SERVER_URL?: string;
 };
 
 export type AppEnv = { Bindings: Env; Variables: { userId: string } };

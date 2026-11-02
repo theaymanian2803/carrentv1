@@ -1,0 +1,3 @@
+# Cloudflare Worker secrets for local dev (wrangler dev reads .dev.vars)
+LICENSE_PRIVATE_KEY=
+LICENSE_ADMIN_PASSWORD=

@@ -12,7 +12,11 @@ the sale-readiness work around them.
 - [x] **Admin credentials** — change-password form on the onboarding card
 - [x] **First-run gate** — dismissible checklist, persisted on the profile
 - [x] **Sale model** — v1: Ed25519-signed, domain-bound license keys verified
-      locally, with a minting script. Hosted issuance server is a later step.
+      locally, plus the hosted `license/` Worker for issuance limits, release,
+      and revocation.
+- [ ] **Deploy the license Worker** — `wrangler d1 create carshare-licenses`,
+      apply `license/schema.sql`, set the private key + admin password, deploy,
+      then set `LICENSE_SERVER_URL` in the template.
 - [ ] **Buyer database** — Pro stays env-configured (current), or add a Setup → Connect Turso screen like the Normal build?
 
 ## 1. Onboarding

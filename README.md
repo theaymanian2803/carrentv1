@@ -114,6 +114,11 @@ docs/superpowers/  Design specs, implementation plan, QA checklist
   public key is baked in; the private key lives outside the repo. Mint a key:
   `cd server && LICENSE_PRIVATE_KEY_PATH=<path> bun run scripts/mint-license.ts --domain <host> --days 365`.
   Paste it at `/admin`. Set `LICENSE_DISABLED=1` only for local development.
+- **Hosted issuance**: `license/` is a standalone Cloudflare Worker + D1 that
+  creates keys, binds up to N domains per key, releases domains, revokes keys,
+  and serves a password-protected admin page. Deploy it, then set
+  `LICENSE_SERVER_URL` so the template activates against it. Without that URL,
+  the template verifies offline keys locally.
 - PayPal routes return `503 Payments not configured` until the PayPal variables are set.
 - Media uploads are limited to 5 MB and validated by file signature, not just MIME type.
 - Bookings recompute all prices server-side and reject overlapping dates atomically.

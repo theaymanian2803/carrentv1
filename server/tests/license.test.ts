@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { SignJWT, exportJWK, generateKeyPair, type JWK, type KeyLike } from "jose";
 import app from "../src/index";
 import { makeTestEnv, resetSchema, call, seedUser, authHeaders } from "./helpers";
@@ -11,6 +11,8 @@ const { publicKey, privateKey } = await generateKeyPair("EdDSA", {
 });
 const publicJwk = (await exportJWK(publicKey)) as JWK;
 
+afterEach(() => vi.unstubAllGlobals());
+
 const licenseEnv = (env: Env): Env => ({
   ...env,
   LICENSE_DISABLED: undefined,
@@ -22,14 +24,15 @@ const licenseEnv = (env: Env): Env => ({
 const mint = async (input: {
   domain?: string;
   product?: string;
-  expiresAt?: number;
+  expiresAt?: number | string;
+  mode?: "forever" | "managed";
   signer?: KeyLike;
 } = {}): Promise<string> =>
   new SignJWT({
     key: "CARSHARE-TEST",
     product: input.product ?? "carshare",
     domain: input.domain ?? "localhost",
-    mode: "forever",
+    mode: input.mode ?? "forever",
   })
     .setProtectedHeader({ alg: "EdDSA" })
     .setIssuedAt()
@@ -115,6 +118,91 @@ describe("licensing", () => {
     const res = await activate(env, await mint({ product: "petpaw" }));
     expect(res.status).toBe(400);
     expect(((await res.json()) as any).reason).toBe("product_mismatch");
+  });
+
+  it("activates through the hosted license server when configured", async () => {
+    const env = {
+      ...licenseEnv(await makeTestEnv()),
+      LICENSE_SERVER_URL: "https://license.test",
+    };
+    await resetSchema(env);
+    const grant = await mint({ mode: "managed" });
+
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({ grant, mode: "managed", domains_used: 1, max_domains: 3 }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await activate(env, "CARSHARE-AAAA-BBBB-CCCC");
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as any).licensed).toBe(true);
+
+    const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(call[0]).toBe("https://license.test/v1/activate");
+    expect(JSON.parse(String(call[1].body))).toMatchObject({
+      key: "CARSHARE-AAAA-BBBB-CCCC",
+      domain: "localhost",
+      product: "carshare",
+    });
+  });
+
+  it("maps a hosted domain-limit error to a clear message", async () => {
+    const env = {
+      ...licenseEnv(await makeTestEnv()),
+      LICENSE_SERVER_URL: "https://license.test",
+    };
+    await resetSchema(env);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ error: "domain_limit", used: 3, max: 3 }), {
+          status: 409,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
+
+    const res = await activate(env, "CARSHARE-AAAA-BBBB-CCCC");
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as any).reason).toBe("domain_limit");
+  });
+
+  it("clears a managed grant when the heartbeat reports revocation", async () => {
+    const env = {
+      ...licenseEnv(await makeTestEnv()),
+      LICENSE_SERVER_URL: "https://license.test",
+    };
+    await resetSchema(env);
+    const grant = await mint({ mode: "managed" });
+    await db(env).execute({
+      sql: "INSERT INTO settings (key, value, updated_at) VALUES ('license_grant', ?, ?)",
+      args: [grant, new Date().toISOString()],
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ error: "revoked" }), {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
+
+    const status = await call(app, env, "/api/license/status");
+    expect(status.status).toBe(200);
+    const body = (await status.json()) as any;
+    expect(body.licensed).toBe(false);
+    expect(body.reason).toBe("revoked");
+
+    const { rows } = await db(env).execute({
+      sql: "SELECT value FROM settings WHERE key = 'license_grant'",
+      args: [],
+    });
+    expect(rows).toHaveLength(0);
   });
 
   it("allows writes when licensing is disabled for development", async () => {

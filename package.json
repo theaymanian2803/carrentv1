@@ -11,7 +11,11 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "package:pages": "bun run scripts/package-pages.ts"
+    "package:pages": "bun run scripts/package-pages.ts",
+    "license:dev": "bun run --cwd license dev",
+    "license:test": "bun run --cwd license test",
+    "license:typecheck": "bun run --cwd license typecheck",
+    "license:deploy": "bun run --cwd license deploy"
   },
   "dependencies": {
     "@fontsource/epilogue": "^5.2.8",
