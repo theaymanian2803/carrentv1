@@ -5,6 +5,7 @@ import { ensureBootstrap } from "./bootstrap";
 import { authRoutes } from "./routes/auth";
 import { catalogRoutes } from "./routes/catalog";
 import { mediaRoutes } from "./routes/media";
+import { meRoutes } from "./routes/me";
 
 export type { AppEnv };
 
@@ -26,5 +27,6 @@ app.get("/health", (c) => c.json({ ok: true }));
 authRoutes(app);
 catalogRoutes(app);
 mediaRoutes(app);
+meRoutes(app);
 
 export default app;
