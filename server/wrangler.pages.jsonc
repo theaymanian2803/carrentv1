@@ -1,0 +1,5 @@
+{
+  "name": "carshare-pages-api",
+  "main": "src/pages-entry.ts",
+  "compatibility_date": "2026-08-01"
+}

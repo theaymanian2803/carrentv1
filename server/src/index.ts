@@ -15,6 +15,8 @@ const app = new Hono<AppEnv>().basePath("/api");
 
 app.use("*", cors({ origin: (origin, c) => c.env.APP_ORIGIN || origin || "*" }));
 
+app.get("/health", (c) => c.json({ ok: true }));
+
 app.use("*", async (c, next) => {
   try {
     await ensureBootstrap(c.env);
@@ -23,8 +25,6 @@ app.use("*", async (c, next) => {
   }
   await next();
 });
-
-app.get("/health", (c) => c.json({ ok: true }));
 
 authRoutes(app);
 catalogRoutes(app);

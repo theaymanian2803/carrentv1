@@ -10,11 +10,14 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist-pages
 *.local
 
 # Server / local database
+.wrangler
 server/.dev.vars
 server/.wrangler
+server/.wrangler-test
 server/.test
 server/.smoke
 .turso
