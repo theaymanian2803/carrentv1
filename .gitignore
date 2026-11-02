@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Server / local database
+server/.dev.vars
+server/.wrangler
+server/.test
+.turso
+.superpowers
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
