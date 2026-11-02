@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import type { Env } from "./env";
+import type { AppEnv } from "./env";
 import { ensureBootstrap } from "./bootstrap";
+import { authRoutes } from "./routes/auth";
 
-export type AppEnv = { Bindings: Env; Variables: { userId: string } };
+export type { AppEnv };
 
 const app = new Hono<AppEnv>().basePath("/api");
 
@@ -19,5 +20,7 @@ app.use("*", async (c, next) => {
 });
 
 app.get("/health", (c) => c.json({ ok: true }));
+
+authRoutes(app);
 
 export default app;

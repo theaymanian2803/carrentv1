@@ -11,3 +11,5 @@ export type Env = {
   PAYPAL_WEBHOOK_ID?: string;
   APP_ORIGIN?: string;
 };
+
+export type AppEnv = { Bindings: Env; Variables: { userId: string } };
