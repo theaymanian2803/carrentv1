@@ -30,7 +30,9 @@ import {
   BANNER_LAYOUTS,
   BANNER_LAYOUT_LABELS,
   BANNER_OVERLAYS,
+  emptyBannerCard,
   type BannerAlign,
+  type BannerCard,
   type BannerLayout,
   type BannerOverlay,
 } from '@/lib/banners';
@@ -71,6 +73,7 @@ interface Draft {
   layout: BannerLayout;
   text_align: BannerAlign;
   overlay: BannerOverlay;
+  cards: BannerCard[];
 }
 
 const toDraft = (section: LandingSection): Draft => {
@@ -89,6 +92,7 @@ const toDraft = (section: LandingSection): Draft => {
     layout: banner.layout,
     text_align: banner.text_align,
     overlay: banner.overlay,
+    cards: banner.cards,
   };
 };
 
@@ -118,6 +122,7 @@ const AdminPageBuilder = () => {
   const [newLayout, setNewLayout] = useState<BannerLayout>('split');
   const [newAlign, setNewAlign] = useState<BannerAlign>('left');
   const [newOverlay, setNewOverlay] = useState<BannerOverlay>('dark');
+  const [newCards, setNewCards] = useState<BannerCard[]>([emptyBannerCard(), emptyBannerCard()]);
 
   const all = sections ?? [];
   const hero = all.find(isHero);
@@ -128,6 +133,13 @@ const AdminPageBuilder = () => {
   const getDraft = (section: LandingSection): Draft => drafts[section.id] ?? toDraft(section);
   const setDraft = (section: LandingSection, patch: Partial<Draft>) =>
     setDrafts((prev) => ({ ...prev, [section.id]: { ...getDraft(section), ...patch } }));
+
+  const setCard = (section: LandingSection, index: number, patch: Partial<BannerCard>) => {
+    const cards = getDraft(section).cards.map((card, i) =>
+      i === index ? { ...card, ...patch } : card
+    );
+    setDraft(section, { cards });
+  };
 
   const currentHero = heroDraft ?? heroToDraft(hero);
   const setHeroField = (patch: Partial<HeroContent>) =>
@@ -200,6 +212,7 @@ const AdminPageBuilder = () => {
           layout: draft.layout,
           text_align: draft.text_align,
           overlay: draft.overlay,
+          cards: draft.cards,
         };
     updateSection.mutate(
       { id: section.id, title: draft.title, content },
@@ -245,6 +258,7 @@ const AdminPageBuilder = () => {
             layout: newLayout,
             text_align: newAlign,
             overlay: newOverlay,
+            cards: newCards,
           };
 
     createSection.mutate(
@@ -392,52 +406,70 @@ const AdminPageBuilder = () => {
                           <Field label="Titre" value={draft.title} onChange={(v) => setDraft(section, { title: v })} />
                           {banner ? (
                             <>
-                              <Field label="Sur-titre" value={draft.subtitle} onChange={(v) => setDraft(section, { subtitle: v })} />
-                              <Field label="Titre affiché" value={draft.heading} onChange={(v) => setDraft(section, { heading: v })} />
                               <div className="grid gap-1.5">
-                                <Label>Description</Label>
-                                <Textarea rows={3} value={draft.description} onChange={(e) => setDraft(section, { description: e.target.value })} />
+                                <Label>Disposition</Label>
+                                <Select value={draft.layout} onValueChange={(value) => setDraft(section, { layout: value as BannerLayout })}>
+                                  <SelectTrigger><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    {BANNER_LAYOUTS.map((layout) => (
+                                      <SelectItem key={layout} value={layout}>{BANNER_LAYOUT_LABELS[layout]}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
-                              <div className="grid sm:grid-cols-2 gap-4">
-                                <Field label="Image (URL)" value={draft.image_url} onChange={(v) => setDraft(section, { image_url: v })} placeholder="https://…" />
-                                <Field label="Bouton" value={draft.cta} onChange={(v) => setDraft(section, { cta: v })} />
-                                <Field label="Lien du bouton" value={draft.cta_link} onChange={(v) => setDraft(section, { cta_link: v })} />
-                              </div>
-                              <div className="grid sm:grid-cols-3 gap-4">
-                                <div className="grid gap-1.5">
-                                  <Label>Disposition</Label>
-                                  <Select value={draft.layout} onValueChange={(value) => setDraft(section, { layout: value as BannerLayout })}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      {BANNER_LAYOUTS.map((layout) => (
-                                        <SelectItem key={layout} value={layout}>{BANNER_LAYOUT_LABELS[layout]}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+
+                              {draft.layout === 'duo' ? (
+                                <div className="grid gap-4">
+                                  <CardEditor
+                                    label="Carte 1"
+                                    card={draft.cards[0]}
+                                    onChange={(patch) => setCard(section, 0, patch)}
+                                  />
+                                  <CardEditor
+                                    label="Carte 2"
+                                    card={draft.cards[1]}
+                                    onChange={(patch) => setCard(section, 1, patch)}
+                                  />
                                 </div>
-                                <div className="grid gap-1.5">
-                                  <Label>Alignement du texte</Label>
-                                  <Select value={draft.text_align} onValueChange={(value) => setDraft(section, { text_align: value as BannerAlign })}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      {BANNER_ALIGNS.map((align) => (
-                                        <SelectItem key={align} value={align}>{align === 'center' ? 'Centré' : 'À gauche'}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="grid gap-1.5">
-                                  <Label>Voile sur l’image</Label>
-                                  <Select value={draft.overlay} onValueChange={(value) => setDraft(section, { overlay: value as BannerOverlay })}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      {BANNER_OVERLAYS.map((overlay) => (
-                                        <SelectItem key={overlay} value={overlay}>{overlay === 'dark' ? 'Sombre' : 'Clair'}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
+                              ) : (
+                                <>
+                                  <Field label="Sur-titre" value={draft.subtitle} onChange={(v) => setDraft(section, { subtitle: v })} />
+                                  <Field label="Titre affiché" value={draft.heading} onChange={(v) => setDraft(section, { heading: v })} />
+                                  <div className="grid gap-1.5">
+                                    <Label>Description</Label>
+                                    <Textarea rows={3} value={draft.description} onChange={(e) => setDraft(section, { description: e.target.value })} />
+                                  </div>
+                                  <div className="grid sm:grid-cols-2 gap-4">
+                                    <Field label="Image (URL)" value={draft.image_url} onChange={(v) => setDraft(section, { image_url: v })} placeholder="https://…" />
+                                    <Field label="Bouton" value={draft.cta} onChange={(v) => setDraft(section, { cta: v })} />
+                                    <Field label="Lien du bouton" value={draft.cta_link} onChange={(v) => setDraft(section, { cta_link: v })} />
+                                  </div>
+                                  <div className="grid sm:grid-cols-2 gap-4">
+                                    <div className="grid gap-1.5">
+                                      <Label>Alignement du texte</Label>
+                                      <Select value={draft.text_align} onValueChange={(value) => setDraft(section, { text_align: value as BannerAlign })}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          {BANNER_ALIGNS.map((align) => (
+                                            <SelectItem key={align} value={align}>{align === 'center' ? 'Centré' : 'À gauche'}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="grid gap-1.5">
+                                      <Label>Voile sur l’image</Label>
+                                      <Select value={draft.overlay} onValueChange={(value) => setDraft(section, { overlay: value as BannerOverlay })}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          {BANNER_OVERLAYS.map((overlay) => (
+                                            <SelectItem key={overlay} value={overlay}>{overlay === 'dark' ? 'Sombre' : 'Clair'}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                             </>
                           ) : (
                             <>
@@ -524,51 +556,73 @@ const AdminPageBuilder = () => {
                     </div>
                   ) : (
                     <div className="grid gap-4">
-                      <Field label="Sur-titre" value={newSubtitle} onChange={setNewSubtitle} />
-                      <Field label="Titre affiché" value={newHeading} onChange={setNewHeading} />
                       <div className="grid gap-1.5">
-                        <Label>Description</Label>
-                        <Textarea rows={3} value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
+                        <Label>Disposition</Label>
+                        <Select value={newLayout} onValueChange={(value) => setNewLayout(value as BannerLayout)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {BANNER_LAYOUTS.map((layout) => (
+                              <SelectItem key={layout} value={layout}>{BANNER_LAYOUT_LABELS[layout]}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <Field label="Bouton" value={newCta} onChange={setNewCta} />
-                        <Field label="Image (URL)" value={newImage} onChange={setNewImage} placeholder="https://…" />
-                      </div>
-                      <div className="grid sm:grid-cols-3 gap-4">
-                        <div className="grid gap-1.5">
-                          <Label>Disposition</Label>
-                          <Select value={newLayout} onValueChange={(value) => setNewLayout(value as BannerLayout)}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {BANNER_LAYOUTS.map((layout) => (
-                                <SelectItem key={layout} value={layout}>{BANNER_LAYOUT_LABELS[layout]}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+
+                      {newLayout === 'duo' ? (
+                        <div className="grid gap-4">
+                          <CardEditor
+                            label="Carte 1"
+                            card={newCards[0]}
+                            onChange={(patch) =>
+                              setNewCards((cards) => cards.map((card, i) => (i === 0 ? { ...card, ...patch } : card)))
+                            }
+                          />
+                          <CardEditor
+                            label="Carte 2"
+                            card={newCards[1]}
+                            onChange={(patch) =>
+                              setNewCards((cards) => cards.map((card, i) => (i === 1 ? { ...card, ...patch } : card)))
+                            }
+                          />
                         </div>
-                        <div className="grid gap-1.5">
-                          <Label>Alignement du texte</Label>
-                          <Select value={newAlign} onValueChange={(value) => setNewAlign(value as BannerAlign)}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {BANNER_ALIGNS.map((align) => (
-                                <SelectItem key={align} value={align}>{align === 'center' ? 'Centré' : 'À gauche'}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="grid gap-1.5">
-                          <Label>Voile sur l’image</Label>
-                          <Select value={newOverlay} onValueChange={(value) => setNewOverlay(value as BannerOverlay)}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {BANNER_OVERLAYS.map((overlay) => (
-                                <SelectItem key={overlay} value={overlay}>{overlay === 'dark' ? 'Sombre' : 'Clair'}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
+                      ) : (
+                        <>
+                          <Field label="Sur-titre" value={newSubtitle} onChange={setNewSubtitle} />
+                          <Field label="Titre affiché" value={newHeading} onChange={setNewHeading} />
+                          <div className="grid gap-1.5">
+                            <Label>Description</Label>
+                            <Textarea rows={3} value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <Field label="Bouton" value={newCta} onChange={setNewCta} />
+                            <Field label="Image (URL)" value={newImage} onChange={setNewImage} placeholder="https://…" />
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div className="grid gap-1.5">
+                              <Label>Alignement du texte</Label>
+                              <Select value={newAlign} onValueChange={(value) => setNewAlign(value as BannerAlign)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {BANNER_ALIGNS.map((align) => (
+                                    <SelectItem key={align} value={align}>{align === 'center' ? 'Centré' : 'À gauche'}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="grid gap-1.5">
+                              <Label>Voile sur l’image</Label>
+                              <Select value={newOverlay} onValueChange={(value) => setNewOverlay(value as BannerOverlay)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {BANNER_OVERLAYS.map((overlay) => (
+                                    <SelectItem key={overlay} value={overlay}>{overlay === 'dark' ? 'Sombre' : 'Clair'}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -594,6 +648,35 @@ const AdminPageBuilder = () => {
     </div>
   );
 };
+
+function CardEditor({
+  label,
+  card,
+  onChange,
+}: {
+  label: string;
+  card: BannerCard;
+  onChange: (patch: Partial<BannerCard>) => void;
+}) {
+  return (
+    <div className="rounded-lg border border-border/60 p-4 grid gap-3">
+      <p className="text-sm font-semibold">{label}</p>
+      <Field label="Image (URL)" value={card.image_url} onChange={(v) => onChange({ image_url: v })} placeholder="https://…" />
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="Sur-titre" value={card.subtitle} onChange={(v) => onChange({ subtitle: v })} />
+        <Field label="Titre" value={card.heading} onChange={(v) => onChange({ heading: v })} />
+      </div>
+      <div className="grid gap-1.5">
+        <Label>Description</Label>
+        <Textarea rows={2} value={card.description} onChange={(e) => onChange({ description: e.target.value })} />
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="Bouton" value={card.cta} onChange={(v) => onChange({ cta: v })} />
+        <Field label="Lien du bouton" value={card.cta_link} onChange={(v) => onChange({ cta_link: v })} />
+      </div>
+    </div>
+  );
+}
 
 function Field({
   label,

@@ -25,9 +25,9 @@ approve listings, manage users, and oversee bookings.
 - **Auth**: email/password, Google sign-in, and “Continue as guest”. Guests get a real
   account and can book; signing in with Google later upgrades the same account in place.
 - **Homepage controls**: add car rows by category (SUVs, Luxury, etc.), reorder, hide, or
-  delete them. Banners support four layouts — split, reversed split, full-width image
-  with overlay, and a compact strip — plus left/center text and dark/light overlay.
-  The header, hero, category strip, host block, and footer stay fixed.
+  delete them. Banners support five layouts — split, reversed split, full-width image
+  with overlay, compact strip, and two cards side by side — plus left/center text and
+  dark/light overlay. The header, hero, category strip, host block, and footer stay fixed.
 
 ## Local development
 

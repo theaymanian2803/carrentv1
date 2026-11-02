@@ -23,9 +23,26 @@ describe('bannerSettings', () => {
   });
 
   it('keeps every supported layout', () => {
-    for (const layout of ['split', 'split-reverse', 'full', 'compact']) {
+    for (const layout of ['split', 'split-reverse', 'full', 'compact', 'duo']) {
       expect(bannerSettings(section({ layout })).layout).toBe(layout);
     }
+  });
+
+  it('parses two cards for the duo layout', () => {
+    const result = bannerSettings(
+      section({
+        layout: 'duo',
+        cards: [
+          { heading: 'SUVs', cta: 'Voir', cta_link: '/search?category=SUV' },
+          { heading: 'Luxe', image_url: '/a.jpg' },
+        ],
+      })
+    );
+    expect(result.cards).toHaveLength(2);
+    expect(result.cards[0].heading).toBe('SUVs');
+    expect(result.cards[0].cta_link).toBe('/search?category=SUV');
+    expect(result.cards[1].image_url).toBe('/a.jpg');
+    expect(result.cards[1].cta_link).toBe('/search');
   });
 
   it('falls back to a known layout when the saved value is invalid', () => {

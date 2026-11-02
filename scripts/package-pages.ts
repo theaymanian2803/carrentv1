@@ -58,8 +58,8 @@ FIRST RUN
   - The storefront is live immediately. Demo cars are not seeded in production;
     use Admin -> "Ajouter une annonce" to add your first listing.
   - Admin -> "Éditeur de page" adds homepage car rows by category (SUVs, Luxury,
-    etc.) and banners with split, reversed, full-width, or compact layouts.
-    The header, hero, category strip, host block, and footer stay fixed.
+    etc.) and banners with split, reversed, full-width, compact, or two-card duo
+    layouts. The header, hero, category strip, host block, and footer stay fixed.
   - If you change environment variables later, redeploy the same zip so the
     worker picks them up.
 

@@ -304,6 +304,53 @@ function BannerSection({ section }: { section: LandingSection }) {
     );
   }
 
+  if (layout === 'duo') {
+    const cards = banner.cards.filter(
+      (card) => card.heading || card.image_url || card.description
+    );
+    if (!cards.length) return null;
+    return (
+      <section className="border-b border-border/70 py-16 lg:py-24">
+        <div className="container">
+          {banner.subtitle && <span className="eyebrow">{banner.subtitle}</span>}
+          <div className="grid md:grid-cols-2 gap-6 mt-6">
+            {cards.map((card, index) => (
+              <div key={index} className="border border-border/70 bg-background overflow-hidden flex flex-col">
+                {card.image_url && (
+                  <div className="aspect-[16/10] bg-muted overflow-hidden">
+                    <img
+                      src={card.image_url}
+                      alt={card.heading}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="p-6 flex flex-col flex-1">
+                  {card.subtitle && <span className="eyebrow">{card.subtitle}</span>}
+                  {card.heading && (
+                    <h3 className="font-heading text-2xl mt-3">{card.heading}</h3>
+                  )}
+                  {card.description && (
+                    <p className="text-sm text-muted-foreground leading-relaxed mt-2 flex-1">
+                      {card.description}
+                    </p>
+                  )}
+                  {card.cta && (
+                    <Link to={card.cta_link} className="mt-5">
+                      <Button className="h-10 px-6 rounded-none text-[11px] uppercase tracking-[0.22em] gap-2">
+                        {card.cta} <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const reverse = layout === 'split-reverse';
   return (
     <section className="border-b border-border/70 py-20 lg:py-28">
