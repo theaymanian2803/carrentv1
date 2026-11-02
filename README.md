@@ -1,5 +1,21 @@
 # CarShare Connect
 
+> **Backend update (2026-11-02):** the Supabase implementation described below has been
+> replaced. The app now runs on **Turso (libSQL)** behind a **Hono API on Cloudflare
+> Workers**, with TanStack Query on the frontend, JWT + PBKDF2 auth, media stored in the
+> database, and PayPal subscriptions ported to the worker. See
+> `docs/superpowers/specs/2026-11-02-turso-pro-backend-design.md`.
+>
+> **Run locally**
+> 1. `cp server/.dev.vars.example server/.dev.vars` and set `TURSO_DATABASE_URL`,
+>    `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
+> 2. `bun install && bun --cwd server install`.
+> 3. `bun run --cwd server dev` (API on 8787) and `bun run dev` (web on 8080, proxies `/api`).
+> 4. For a file-backed local API without Wrangler: `bun run server/scripts/serve.ts`.
+>
+> **Package for sale:** `bun run package:pages` writes
+> `C:\Users\PC\Desktop\builds\carshare-cloudflare-pages.zip`.
+
 Gemini said
 
 This is the ultimate, production-grade prompt for Lovable AI. To build a true SaaS platform, we need to introduce a Super Admin role, KYC (Identity Verification), Stripe Connect (for split payments), a Review System, and In-App Messaging.
