@@ -7,6 +7,7 @@ import { catalogRoutes } from "./routes/catalog";
 import { mediaRoutes } from "./routes/media";
 import { meRoutes } from "./routes/me";
 import { adminRoutes } from "./routes/admin";
+import { paymentRoutes } from "./routes/payments";
 
 export type { AppEnv };
 
@@ -30,5 +31,6 @@ catalogRoutes(app);
 mediaRoutes(app);
 meRoutes(app);
 adminRoutes(app);
+paymentRoutes(app);
 
 export default app;
