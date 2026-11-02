@@ -1,5 +1,7 @@
 # Roadmap
 
+> Tomorrow’s prioritised sellers’ checklist is in [`TODO.md`](TODO.md).
+
 ## Done — Pro build
 
 - [x] Turso schema, bootstrap, and idempotent migrations
